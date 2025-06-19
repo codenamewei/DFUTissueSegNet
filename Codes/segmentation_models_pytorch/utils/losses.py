@@ -73,8 +73,7 @@ class BCEWithLogitsLoss(nn.BCEWithLogitsLoss, base.Loss):
 
 # =======================================================================
 import sys
-#sys.path.append('/content/drive/MyDrive/Wound_tissue_segmentation/wound_lib/segmentation_models_pytorch/losses')
-sys.path.append('../losses')
+sys.path.append('/home/chiawei/temp/DFUTissueSegNet/Codes/segmentation_models_pytorch/losses')
 
 from typing import Optional
 from functools import partial
