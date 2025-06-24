@@ -1,4 +1,4 @@
-# /home/chiawei/temp/
+# /home/chiawei/temp/wound_tissue_segmentation
 # - checkpoints
 # - predictions
 
