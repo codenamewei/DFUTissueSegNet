@@ -1,6 +1,7 @@
 # /home/chiawei/temp/wound_tissue_segmentation
 # - checkpoints
 # - predictions
+# - plots
 
 import os
 import torch
