@@ -21,7 +21,7 @@ from copy import deepcopy
 from datetime import datetime
 import torch.nn.functional as F
 
-rootmodelpath = "/home/chiawei/temp/Wound_tissue_segmentation"
+rootmodelpath = "/home/chiawei/temp/wound_tissue_segmentation"
 checkpointpath = os.path.join(rootmodelpath, "checkpoints")
 predictionpath = os.path.join(rootmodelpath, "predictions")
 plotpath = os.path.join(rootmodelpath, "plots")
