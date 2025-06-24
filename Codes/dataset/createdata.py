@@ -23,4 +23,4 @@ def copy_dataset(dfutissue_root, output_root):
         shutil.copy(os.path.join(image_src, img), os.path.join(output_root, 'test_images', img))
         shutil.copy(os.path.join(mask_src, img), os.path.join(output_root, 'test_labels', img))
 
-copy_dataset("../../DFUTissue", "../../dataset_MiT_v3+aug-added")
+copy_dataset("../../DFUTissue/Labelled", "/home/chiawei/temp/Wound_tissue_segmentation/dataset_MiT_v3+aug-added")#"../../dataset_MiT_v3+aug-added")
