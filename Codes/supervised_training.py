@@ -1,8 +1,3 @@
-# /home/chiawei/temp/wound_tissue_segmentation
-# - checkpoints
-# - predictions
-# - plots
-# mkdir -p dataset_MiT_v3+aug-added/{PNGImages,SegmentationClass,test_images,test_labels}
 
 import os
 import torch
@@ -23,7 +18,7 @@ from copy import deepcopy
 from datetime import datetime
 import torch.nn.functional as F
 
-rootmodelpath = "/home/chiawei/temp/wound_tissue_segmentation"
+rootmodelpath = "/home/chiawei/Documents/work/dfu/DFUTissueSegNet_metadata"
 checkpointpath = os.path.join(rootmodelpath, "checkpoints")
 predictionpath = os.path.join(rootmodelpath, "predictions")
 plotpath = os.path.join(rootmodelpath, "plots")
@@ -209,7 +204,7 @@ ENCODER_WEIGHTS = 'imagenet'
 BATCH_SIZE = 16
 n_classes = 4
 ACTIVATION = 'sigmoid' # could be None for logits or 'softmax2d' for multiclass segmentation
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+DEVICE = "cpu"#torch.device("cuda" if torch.cuda.is_available() else "cpu")
 LR = 0.0001 # learning rate
 EPOCHS = 500
 WEIGHT_DECAY = 1e-5
@@ -306,8 +301,8 @@ scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,
                               factor=0.1,
                               mode='min',
                               patience=10,
-                              min_lr=0.00001,
-                              verbose=True,
+                              min_lr=0.00001#,
+                              #verbose=True,
                               )
 
 seed = random.randint(0, 5000)

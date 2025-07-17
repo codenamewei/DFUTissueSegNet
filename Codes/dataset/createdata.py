@@ -1,5 +1,6 @@
 import os
 import shutil
+import logging
 
 def copy_dataset(dfutissue_root, output_root):
     image_src = os.path.join(dfutissue_root, 'Labeled/Original/Images/TrainVal')
@@ -60,4 +61,8 @@ def copy_dataset(dfutissue_root, output_root):
 
 #copy_dataset("../../DFUTissue", "../../dataset_MiT_v3+aug-added")
 #copy_dataset("/home/chiawei/temp/DFUTissueSegNet/DFUTissue", "/home/chiawei/temp/Wound_tissue_segmentation/dataset_MiT_v3+aug-added")
-copy_dataset("/home/chiawei/dfu/DFUTissueSegNet/DFUTissue", "/home/chiawei/temp/wound_tissue_segmentation/dataset_MiT_v3+aug-added")
+
+repo_path = "/home/chiawei/Documents/work/dfu/DFUTissueSegNet"
+data_path = "/home/chiawei/Documents/work/dfu/DFUTissueSegNet_metadata"
+copy_dataset(os.path.join(repo_path, "DFUTissue"), os.path.join(data_path, "dataset_MiT_v3+aug-added"))
+logging.info("Completed copy data from {repo_path} to {data_path}")
