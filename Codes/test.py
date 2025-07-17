@@ -519,6 +519,11 @@ for i in range(len(list_IDs_test)):
         # --- Save raw prediction ---
         cv2.imwrite(os.path.join(save_dir_pred, list_IDs_test[i]), np.squeeze(pred).astype(np.uint8))
 
+        debug_image_path = os.path.join(x_test_dir, list_IDs_test[i])
+        raw_contour_img = cv2.imread(debug_image_path)
+        # print(f"[DEBUGGING] {os.path.exists(debug_image_path)}")
+        # print(f"[DEBUGGING] {debug_image_path}")
+
         # --- Palette masks ---
         pal_gt_mask = np.squeeze(gt_mask).astype(np.uint8)
         pal_gt_mask = Image.fromarray(pal_gt_mask).convert("P")
@@ -555,13 +560,16 @@ for i in range(len(list_IDs_test)):
 
         # Contour drawing
         contour_img = img_np.copy()
+        raw_contour_img_resized = cv2.resize(raw_contour_img, (256, 256))
+        print(f"[DEBUGGING] contour_img.shape {contour_img.shape}")
+        print(f"[DEBUGGING] raw_contour_img.shape {raw_contour_img.shape}")
         for label_val in np.unique(pred):
             if label_val == 0: continue
             mask_uint8 = (pred == label_val).astype(np.uint8) * 255
             contours, _ = cv2.findContours(mask_uint8, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-            cv2.drawContours(contour_img, contours, -1, (0, 255, 0), 2)  # green contour
+            cv2.drawContours(raw_contour_img_resized, contours, -1, (0, 255, 0), 2)  # green contour
 
-        cv2.imwrite(os.path.join(save_dir_pred_contour, list_IDs_test[i]), contour_img)
+        cv2.imwrite(os.path.join(save_dir_pred_contour, list_IDs_test[i]), raw_contour_img_resized)
         print(f"Write to {os.path.join(save_dir_pred_contour, list_IDs_test[i])}")
 
 
