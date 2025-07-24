@@ -11,10 +11,7 @@ from torch.utils.data import Dataset as BaseDataset
 import albumentations as albu
 import cv2
 import numpy as np
-from segmentation_models_pytorch.utils import losses, base, train
-from segmentation_models_pytorch.utils import metrics as metricsutil
-from segmentation_models_pytorch.decoders.unet import model
-from segmentation_models_pytorch import encoders
+
 
 import random
 import matplotlib.pyplot as plt
@@ -22,13 +19,21 @@ import os
 from copy import deepcopy
 from datetime import datetime
 import torch.nn.functional as F
+import sys
+
+sys.path.append("../../Codes")
+
+from segmentation_models_pytorch.utils import losses, base, train
+from segmentation_models_pytorch.utils import metrics as metricsutil
+from segmentation_models_pytorch.decoders.unet import model
+from segmentation_models_pytorch import encoders
 
 rootmodelpath = "/home/chiawei/Documents/work/dfu/DFUTissueSegNet_metadata/"
 checkpointpath = os.path.join(rootmodelpath, "checkpoints")
 predictionpath = os.path.join(rootmodelpath, "predictions")
 plotpath = os.path.join(rootmodelpath, "plots")
 datasetpath = os.path.join(rootmodelpath, "dataset_MiT_v3+aug-added")
-repodatapath = "../DFUTissue/Labeled"
+repodatapath = "../../DFUTissue/Labeled"
 
 
 # Checkpoint directory
