@@ -19,6 +19,7 @@ import os
 from copy import deepcopy
 from datetime import datetime
 import torch.nn.functional as F
+import copy
 import sys
 
 sys.path.append("../../Codes")
@@ -35,6 +36,18 @@ plotpath = os.path.join(rootmodelpath, "plots")
 datasetpath = os.path.join(rootmodelpath, "dataset_MiT_v3+aug-added")
 repodatapath = "../../DFUTissue/Labeled"
 
+
+label_color_keyvalue = {
+    0: [0, 0, 0],         # background
+    1: [0, 255, 0],       # granulation tissue
+    2: [0, 0, 255],       # callus
+    3: [255, 0, 0],       # fibrin
+    4: [255, 255, 0],     # necrotic tissue (yellow)
+    5: [255, 0, 255],     # eschar (magenta)
+    6: [0, 255, 255],     # neodermis (cyan)
+    7: [128, 0, 128],     # tendon (purple)
+    8: [255, 165, 0]      # dressing (orange)
+}
 
 # Checkpoint directory
 checkpoint_loc = os.path.join(rootmodelpath, "checkpoints", "MiT+pscse_padded_aug_mit_b3_sup_2025-07-18_00-00-35")
@@ -348,20 +361,6 @@ print('No. of test images: ', len(list_IDs_test))
 model_name = BASE_MODEL + '_padded_aug_' + ENCODER + '_sup_' + datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 print(model_name)
 
-# print(x_train_dir)
-
-# for item in list_IDs_train:
-
-#     debugpath = os.path.join(x_train_dir, item)
-
-#     if os.path.exists(debugpath):
-
-#         print(f"x {debugpath}")
-#         break
-
-#     else:
-#         print(f"o {debugpath}")
-
 # Default images
 DEFAULT_IMG_TRAIN = cv2.imread(os.path.join(x_train_dir, list_IDs_train[0]))[:,:,::-1]
 DEFAULT_MASK_TRAIN = cv2.imread(os.path.join(y_train_dir, list_IDs_train[0]), 0)
@@ -523,9 +522,11 @@ for i in range(len(list_IDs_test)):
     if save_pred:
         # --- Save raw prediction ---
         cv2.imwrite(os.path.join(save_dir_pred, list_IDs_test[i]), np.squeeze(pred).astype(np.uint8))
+        print(f"Compare: Write to {os.path.join(save_dir_pred, list_IDs_test[i])}")
 
         debug_image_path = os.path.join(x_test_dir, list_IDs_test[i])
-        raw_contour_img = cv2.imread(debug_image_path)
+        raw_color_img = cv2.imread(debug_image_path)
+        prediction_sized_raw_color_img= cv2.resize(raw_color_img.copy(), (256, 256))
         # print(f"[DEBUGGING] {os.path.exists(debug_image_path)}")
         # print(f"[DEBUGGING] {debug_image_path}")
 
@@ -543,63 +544,46 @@ for i in range(len(list_IDs_test)):
         concat_pals = Image.new("RGB", (pal_gt_mask.width*2, pal_gt_mask.height), "white")
         concat_pals.paste(pal_gt_mask, (0, 0))
         concat_pals.paste(pal_pred, (pal_gt_mask.width, 0))
-        concat_pals.save(os.path.join(save_dir_pred_pal_cat, list_IDs_test[i]))
-        print(os.path.join(save_dir_pred_pal_cat, list_IDs_test[i]))
-
+        concat_pals.save(os.path.join(save_dir_pred_pal_cat, list_IDs_test[i]))        
         
         # Convert original image tensor to numpy [H, W, 3]
         img_np = image.squeeze().permute(1, 2, 0).cpu().numpy()
+    
         img_np = (img_np * 255).astype(np.uint8) if img_np.max() <= 1.0 else img_np.astype(np.uint8)
 
+    
         # Initialize silhouette image
+        silhouette_base_image = prediction_sized_raw_color_img.copy()
         silhouette = np.zeros_like(img_np)
 
         for label_val in np.unique(pred):
             if label_val == 0: continue  # skip background
-            color = [255, 0, 0]  # red overlay
-            silhouette[pred == label_val] = color
-
-        blended = cv2.addWeighted(img_np, 0.7, silhouette, 0.3, 0)
+            silhouette[pred == label_val] = label_color_keyvalue[label_val]
+    
+        blended = cv2.addWeighted(silhouette_base_image, 0.3, silhouette, 0.7, 0)
         cv2.imwrite(os.path.join(save_dir_pred_overlay, list_IDs_test[i]), blended)
-        print(f"Write to {os.path.join(save_dir_pred_overlay, list_IDs_test[i])}")
+        print(f"Silhouette: Write to {os.path.join(save_dir_pred_overlay, list_IDs_test[i])}")
+
+        # Initialize silhouette image
+        # silhouette_base_image = np.ones((256, 256,3), dtype = np.uint8) * 255#prediction_sized_raw_color_img.copy()
+        # silhouette = np.zeros_like(img_np)
+
+        # for label_val in np.unique(pred):
+        #     if label_val == 0: continue  # skip background
+        #     color = [255, 0, 0]  # red overlay
+        #     silhouette[pred == label_val] = color
+
+        # blended = cv2.addWeighted(silhouette_base_image, 0.7, silhouette, 0.3, 0)
+        # cv2.imwrite(os.path.join(save_dir_pred_overlay, list_IDs_test[i]), blended)
+        # print(f"Write to {os.path.join(save_dir_pred_overlay, list_IDs_test[i])}")
 
         # Contour drawing
-        contour_img = img_np.copy()
-        raw_contour_img_resized = cv2.resize(raw_contour_img, (256, 256))
-        print(f"[DEBUGGING] contour_img.shape {contour_img.shape}")
-        print(f"[DEBUGGING] raw_contour_img.shape {raw_contour_img.shape}")
+        contour_base_image = prediction_sized_raw_color_img.copy()
         for label_val in np.unique(pred):
             if label_val == 0: continue
             mask_uint8 = (pred == label_val).astype(np.uint8) * 255
             contours, _ = cv2.findContours(mask_uint8, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-            cv2.drawContours(raw_contour_img_resized, contours, -1, (0, 255, 0), 2)  # green contour
+            cv2.drawContours(contour_base_image, contours, -1, (0, 255, 0), 2)  # green contour
 
-        cv2.imwrite(os.path.join(save_dir_pred_contour, list_IDs_test[i]), raw_contour_img_resized)
-        print(f"Write to {os.path.join(save_dir_pred_contour, list_IDs_test[i])}")
-
-
-    # Compute metrics
-    lbl_gt = set(np.unique(gt_mask))
-    lbl_gt.discard(0)
-    lbl_pred = set(np.unique(pred))
-    lbl_pred.discard(0)
-
-
-
-# create json object from dictionary
-import json
-json_write = json.dumps(metric)
-f = open(os.path.join(save_dir_pred, "metric.json"), "w")
-f.write(json_write)
-f.close()
-
-# Data-based evalutation
-siou = (stp/(stp + sfp + sfn + ep))*100
-sprecision = (stp/(stp + sfp + ep))*100
-srecall = (stp/(stp + sfn + ep))*100
-sdice = (2 * stp / (2 * stp + sfp + sfn))*100
-
-print('siou:', siou)
-print('sprecision:', sprecision)
-print('srecall:', srecall)
-print('sdice:', sdice)
+        cv2.imwrite(os.path.join(save_dir_pred_contour, list_IDs_test[i]), contour_base_image)
+        print(f"Contour: Write to {os.path.join(save_dir_pred_contour, list_IDs_test[i])}")
