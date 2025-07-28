@@ -23,7 +23,7 @@ checkpointpath = os.path.join(rootmodelpath, "checkpoints")
 predictionpath = os.path.join(rootmodelpath, "predictions")
 plotpath = os.path.join(rootmodelpath, "plots")
 datasetpath = os.path.join(rootmodelpath, "dataset_MiT_v3+aug-added")
-repodatapath = "../DFUTissue/Labeled"
+repodatapath = "../../../DFUTissue/Labeled"
 
 
 allpaths = [checkpointpath, predictionpath, plotpath, datasetpath]
