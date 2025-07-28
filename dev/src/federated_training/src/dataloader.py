@@ -39,7 +39,7 @@ class DFUTissueSegNetDataLoader(PyTorchDataLoader):
         self.feature_shape = [256, 256]
         self.num_classes = num_classes
 
-        #self.data_path = "/home/chiawei/dev/DFUTissueSegNet/DFUTissue/Labeled"#FIXMEdata_path
+        self.data_path = data_path# "/home/chiawei/dev/DFUTissueSegNet/DFUTissue/Labeled"#FIXMEdata_path
 
         self.RESIZE = (True, self.feature_shape)
 
@@ -91,6 +91,9 @@ class DFUTissueSegNetDataLoader(PyTorchDataLoader):
         return self.valid_loader
 
     def generate_data_loader(self):
+
+        if not self.data_path:
+            return
 
         list_IDs_train = _read_names(os.path.join(self.data_path, 'labeled_train_names.txt'), ext='.png')
         list_IDs_val = _read_names(os.path.join(self.data_path, 'labeled_val_names.txt'), ext='.png')
