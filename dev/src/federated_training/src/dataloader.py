@@ -39,7 +39,7 @@ class DFUTissueSegNetDataLoader(PyTorchDataLoader):
         self.feature_shape = [256, 256]
         self.num_classes = num_classes
 
-        self.data_path = data_path
+        self.data_path = "/home/chiawei/dev/DFUTissueSegNet/DFUTissue/Labeled"#FIXMEdata_path
 
         self.RESIZE = (True, self.feature_shape)
 
