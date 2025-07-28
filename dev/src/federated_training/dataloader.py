@@ -130,7 +130,7 @@ class DFUTissueSegNetDataLoader(PyTorchDataLoader):
             preprocessing=get_preprocessing(preprocessing_fn),
             to_categorical=True,
             resize=(self.RESIZE),
-            n_classes=self.n_classes,
+            n_classes=self.num_classes,
             default_img=DEFAULT_IMG_TRAIN,
             default_mask=DEFAULT_MASK_TRAIN,
         )
@@ -143,7 +143,7 @@ class DFUTissueSegNetDataLoader(PyTorchDataLoader):
             preprocessing=get_preprocessing(preprocessing_fn),
             resize=(self.RESIZE),
             to_categorical=True,
-            n_classes=self.n_classes,
+            n_classes=self.num_classes,
             default_img=DEFAULT_IMG_VAL,
             default_mask=DEFAULT_MASK_VAL,
         )
