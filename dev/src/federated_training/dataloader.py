@@ -16,6 +16,8 @@ from openfl.federated import PyTorchDataLoader
 from torch.utils.data import DataLoader
 from woundlib.thirdpartymodel.segmentation_models_pytorch import encoders
 import albumentations as albu
+import torch
+import torch.nn.functional as F
 
 logger = getLogger(__name__)
 
