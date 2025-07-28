@@ -9,7 +9,7 @@ import numpy as np
 from woundlib.thirdpartymodel.segmentation_models_pytorch.utils import losses, base, train
 from woundlib.thirdpartymodel.segmentation_models_pytorch.utils import metrics as metricsutil
 from woundlib.thirdpartymodel.segmentation_models_pytorch.decoders.unet import model
-from woundlib.thirdpartymodel.egmentation_models_pytorch import encoders
+from woundlib.thirdpartymodel.segmentation_models_pytorch import encoders
 
 import random
 import matplotlib.pyplot as plt
