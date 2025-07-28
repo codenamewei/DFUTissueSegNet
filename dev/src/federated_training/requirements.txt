@@ -1,0 +1,5 @@
+opencv-python
+timm
+pretrainedmodels
+efficientnet-pytorch
+albumentations
