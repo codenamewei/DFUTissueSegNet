@@ -68,6 +68,8 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         self.collaborator_name = os.getenv("COLLABORATOR_NAME", "collaborator")
         logger.info(f"[INFO] TaskRunner initialized for: {self.collaborator_name}")
 
+        self.num_classes = num_classes
+        
         # create segmentation model with pretrained encoder
         self.model = model.Unet(
             encoder_name=ENCODER,
