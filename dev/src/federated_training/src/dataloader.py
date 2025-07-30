@@ -344,3 +344,20 @@ class Dataset(BaseDataset):
 
     def __len__(self):
         return len(self.ids)
+
+
+    def get_train_data_size(self):
+        """Returns the total number of training samples.
+
+        Returns:
+            int: The total number of training samples.
+        """
+        return len(self.train_loader.dataset)
+
+    def get_valid_data_size(self):
+        """Returns the total number of validation samples.
+
+        Returns:
+            int: The total number of validation samples.
+        """
+        return len(self.valid_loader.dataset)
