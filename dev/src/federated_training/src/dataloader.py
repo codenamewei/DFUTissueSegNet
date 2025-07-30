@@ -99,10 +99,6 @@ class DFUTissueSegNetDataLoader(PyTorchDataLoader):
         list_IDs_val = _read_names(os.path.join(self.data_path, 'labeled_val_names.txt'), ext='.png')
         #list_IDs_test = _read_names(os.path.join(self.data_path, 'test_names.txt'), ext='.png')
 
-        self.X_train = np.array([cv2.imread(os.path.join(x_train_dir, img_name))[:, :, ::-1]
-                         for img_name in list_IDs_train])
-        self.X_valid = np.array([cv2.imread(os.path.join(x_valid_dir, img_name))[:, :, ::-1]
-                                for img_name in list_IDs_val])
 
         seed = random.randint(0, 5000)
 
@@ -121,6 +117,12 @@ class DFUTissueSegNetDataLoader(PyTorchDataLoader):
 
         # x_test_dir = os.path.join(self.data_path, "test_images")
         # y_test_dir = os.path.join(self.data_path, "test_labels")
+
+        self.X_train = np.array([cv2.imread(os.path.join(x_train_dir, img_name))[:, :, ::-1]
+                         for img_name in list_IDs_train])
+        self.X_valid = np.array([cv2.imread(os.path.join(x_valid_dir, img_name))[:, :, ::-1]
+                                for img_name in list_IDs_val])
+
 
         # Default images
         DEFAULT_IMG_TRAIN = cv2.imread(os.path.join(x_train_dir, list_IDs_train[0]))[:,:,::-1]
