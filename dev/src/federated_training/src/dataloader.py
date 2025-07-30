@@ -99,6 +99,11 @@ class DFUTissueSegNetDataLoader(PyTorchDataLoader):
         list_IDs_val = _read_names(os.path.join(self.data_path, 'labeled_val_names.txt'), ext='.png')
         #list_IDs_test = _read_names(os.path.join(self.data_path, 'test_names.txt'), ext='.png')
 
+        self.X_train = np.array([cv2.imread(os.path.join(x_train_dir, img_name))[:, :, ::-1]
+                         for img_name in list_IDs_train])
+        self.X_valid = np.array([cv2.imread(os.path.join(x_valid_dir, img_name))[:, :, ::-1]
+                                for img_name in list_IDs_val])
+
         seed = random.randint(0, 5000)
 
         logger.info(f'Seed Number: {seed}')
@@ -344,20 +349,3 @@ class Dataset(BaseDataset):
 
     def __len__(self):
         return len(self.ids)
-
-
-    def get_train_data_size(self):
-        """Returns the total number of training samples.
-
-        Returns:
-            int: The total number of training samples.
-        """
-        return len(self.train_loader.dataset)
-
-    def get_valid_data_size(self):
-        """Returns the total number of validation samples.
-
-        Returns:
-            int: The total number of validation samples.
-        """
-        return len(self.valid_loader.dataset)
