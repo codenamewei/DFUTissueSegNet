@@ -153,15 +153,28 @@ class TemplateTaskRunner(PyTorchTaskRunner):
 
 
     def forward(self, x):
-        """Forward pass of the model.
+        """
+        Defines the forward pass of the CNN model.
 
         Args:
-            x: Data input to the model for the forward pass.
+            x (torch.Tensor): Input tensor of shape (N, C, H, W) where
+                              N is the batch size,
+                              C is the number of channels,
+                              H is the height, and
+                              W is the width.
 
         Returns:
-            The output of the model's forward pass.
+            torch.Tensor: Output tensor after passing through the CNN layers.
         """
-        return self.model(x)
+        x = F.relu(self.conv1(x))
+        x = F.max_pool2d(x, 2, 2)
+        x = F.relu(self.conv2(x))
+        x = F.max_pool2d(x, 2, 2)
+        x = x.view(-1, 800)
+        x = F.relu(self.fc1(x))
+        x = self.fc2(x)
+
+        return x
 
     def train_(
         self, train_dataloader: Iterator[Tuple[np.ndarray, np.ndarray]]
@@ -178,7 +191,7 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         # Implement training logic here and return a Metric object with the training loss.
         # Replace the following placeholder with actual training code.
 
-        logger.info("Train current epoch: {self.epoch}...")
+        logger.info(f"Train current epoch: {self.epoch}...")
         train_logs = self.train_epoch.run(train_dataloader)
 
         # Store losses and metrics
