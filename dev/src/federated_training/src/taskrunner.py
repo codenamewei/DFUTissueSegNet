@@ -123,7 +123,7 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         # create epoch runners =========================================================
         # it is a simple loop of iterating over dataloader`s samples
         self.train_epoch = train.TrainEpoch(
-            model,
+            self.model,
             loss=total_loss,
             metrics=metrics,
             optimizer=optimizer,
@@ -132,7 +132,7 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         )
 
         self.valid_epoch = train.ValidEpoch(
-            model,
+            self.model,
             loss=total_loss,
             metrics=metrics,
             device=device,
