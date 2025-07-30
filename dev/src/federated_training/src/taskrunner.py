@@ -69,7 +69,7 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         logger.info(f"[INFO] TaskRunner initialized for: {self.collaborator_name}")
 
         self.num_classes = num_classes
-        
+
         # create segmentation model with pretrained encoder
         self.model = model.Unet(
             encoder_name=ENCODER,
@@ -88,7 +88,7 @@ class TemplateTaskRunner(PyTorchTaskRunner):
 
         # Optimizer
         optimizer = torch.optim.Adam([
-            dict(params=model.parameters(), lr=LR, weight_decay=WEIGHT_DECAY),
+            dict(params=self.model.parameters(), lr=LR, weight_decay=WEIGHT_DECAY),
         ])
 
         # Learning rate scheduler
