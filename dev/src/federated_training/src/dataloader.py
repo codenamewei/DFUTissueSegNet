@@ -118,10 +118,15 @@ class DFUTissueSegNetDataLoader(PyTorchDataLoader):
         # x_test_dir = os.path.join(self.data_path, "test_images")
         # y_test_dir = os.path.join(self.data_path, "test_labels")
 
-        self.X_train = np.array([cv2.imread(os.path.join(x_train_dir, img_name))[:, :, ::-1]
-                         for img_name in list_IDs_train])
-        self.X_valid = np.array([cv2.imread(os.path.join(x_valid_dir, img_name))[:, :, ::-1]
-                                for img_name in list_IDs_val])
+        self.X_train = np.array([
+            cv2.resize(cv2.imread(os.path.join(x_train_dir, img_name))[:, :, ::-1], tuple(self.feature_shape))
+            for img_name in list_IDs_train
+        ])
+
+        self.X_valid = np.array([
+            cv2.resize(cv2.imread(os.path.join(x_valid_dir, img_name))[:, :, ::-1], tuple(self.feature_shape))
+            for img_name in list_IDs_val
+        ])
 
 
         # Default images
