@@ -10,7 +10,7 @@ ImportError: libGL.so.1: cannot open shared object file: No such file or directo
 
 ### Solution
 ```
-sudo apt-get update && apt-get install ffmpeg libsm6 libxext6  -y
+sudo apt-get update && sudo apt-get install ffmpeg libsm6 libxext6  -y
 ```
 
 ### Error 2

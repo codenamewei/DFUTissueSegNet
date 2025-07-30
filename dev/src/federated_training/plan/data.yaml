@@ -3,5 +3,5 @@
 
 # collaborator_name,data_directory_path
 # collaborator_name,data_directory_path
-portland,/home/chiawei/Documents/work/dfu/DFUTissueSegNet_metadata/dataset_MiT_v3+aug-added
-seattle,/home/chiawei/Documents/work/dfu/DFUTissueSegNet_metadata/dataset_MiT_v3+aug-added
+portland,/home/chiawei/data/dfusegnet
+seattle,/home/chiawei/data/dfusegnet

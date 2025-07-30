@@ -107,8 +107,8 @@ class DFUTissueSegNetDataLoader(PyTorchDataLoader):
         random.seed(seed) # seed for random number generator
         random.shuffle(list_IDs_train) # shuffle train names
 
-        logger.info('No. of training images: ', len(list_IDs_train))
-        logger.info('No. of validation images: ', len(list_IDs_val))
+        logger.info(f'No. of training images: {len(list_IDs_train)}')
+        logger.info(f'No. of validation images: {len(list_IDs_val)}')
         #logger.info('No. of test images: ', len(list_IDs_test))
 
         x_train_dir = x_valid_dir = os.path.join(self.data_path, "PNGImages")
