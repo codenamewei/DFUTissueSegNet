@@ -224,7 +224,7 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         # Replace the following placeholder with actual validation code.
 
 
-        logger.info("Validate current epoch: {self.epoch}...")
+        logger.info(f"Validate current epoch: {self.epoch}...")
 
         valid_logs = self.valid_epoch.run(validation_dataloader)
 

@@ -91,7 +91,7 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         torch.save(self.model.state_dict(), model_path)
 
 
-        return Metric(name="crossentropy_loss", value=np.array(loss))
+        return Metric(name="dice_loss + focal_loss", value=np.array(loss))
 
     def validate_(
         self, validation_dataloader: Iterator[Tuple[np.ndarray, np.ndarray]]
