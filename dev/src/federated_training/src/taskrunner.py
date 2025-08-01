@@ -19,7 +19,7 @@ from woundlib.thirdpartymodel.segmentation_models_pytorch.utils import losses, b
 from woundlib.thirdpartymodel.segmentation_models_pytorch.utils import metrics as metricsutil
 from woundlib.thirdpartymodel.segmentation_models_pytorch.decoders.unet import model
 from woundlib.thirdpartymodel.segmentation_models_pytorch import encoders
-
+from woundlib.thirdpartymodel.segmentation_models_pytorch import modelutils
 import random
 import matplotlib.pyplot as plt
 import os
@@ -87,12 +87,12 @@ class TemplateTaskRunner(PyTorchTaskRunner):
 
 
         # Optimizer
-        optimizer = torch.optim.Adam([
+        self.optimizer = torch.optim.Adam([
             dict(params=self.model.parameters(), lr=LR, weight_decay=WEIGHT_DECAY),
         ])
 
         # Learning rate scheduler
-        self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,
+        self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer,
                                     factor=0.1,
                                     mode='min',
                                     patience=10,
@@ -126,7 +126,7 @@ class TemplateTaskRunner(PyTorchTaskRunner):
             self.model,
             loss=total_loss,
             metrics=metrics,
-            optimizer=optimizer,
+            optimizer=self.optimizer,
             device=device,
             verbose=True,
         )
@@ -204,7 +204,7 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         save_dir = "save"
         os.makedirs(save_dir, exist_ok=True)
         model_path = os.path.join(save_dir,  f"{self.collaborator_name}.pth")#f"{self.collaborator_name}_round{self.round_num}.pth")
-        torch.save(self.model.state_dict(), model_path)
+        modelutils.save(model_path, self.model.state_dict(), self.optimizer.state_dict())
 
         return Metric(name="dice_loss + focal_loss", value=np.array(train_logs[train_loss_key]))
     
