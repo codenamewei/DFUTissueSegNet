@@ -193,6 +193,7 @@ class TemplateTaskRunner(PyTorchTaskRunner):
 
         logger.info(f"Train current epoch: {self.epoch}...")
         train_logs = self.train_epoch.run(train_dataloader)
+        logger.info(f"[DEBUGGING] train_: train_logs: {train_logs}")
 
         # Store losses and metrics
         train_loss_key = list(train_logs.keys())[0] # first key is for loss
@@ -201,9 +202,8 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         self.store_train_iou.append(train_logs["iou_score"])
         self.store_train_dice.append(train_logs["fscore"])
 
-   
-    
-        return Metric(name="crossentropy_loss", value=np.array(train_loss_key))
+
+        return Metric(name="dice_loss + focal_loss", value=np.array(train_logs[train_loss_key]))
 
     def validate_(
         self, validation_dataloader: Iterator[Tuple[np.ndarray, np.ndarray]]
