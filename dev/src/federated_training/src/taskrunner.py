@@ -239,7 +239,7 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         if  self.best_vloss > valid_logs[val_loss_key]:
             self.best_vloss = valid_logs[val_loss_key]
             logger.info(f'Validation loss reduced. Saving the model at epoch: {self.epoch:04d}')
-            cnt_patience = 0 # reset patience
+            self.cnt_patience = 0 # reset patience
             # best_model_epoch = self.epoch
             this_epoch_save_model = True
 
@@ -247,11 +247,12 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         elif self.best_viou < valid_logs['iou_score']:
             self.best_viou = valid_logs['iou_score']
             logger.info(f'Validation IoU increased. Saving the model at epoch: {self.epoch:04d}.')
-            cnt_patience = 0 # reset patience
+            self.cnt_patience = 0 # reset patience
             # best_model_epoch = self.epoch
             this_epoch_save_model = True
 
-        else: cnt_patience += 1
+        else: 
+            self.cnt_patience += 1
 
         # Learning rate scheduler
         self.scheduler.step(valid_logs[sorted(valid_logs.keys())[0]]) # monitor validation loss
