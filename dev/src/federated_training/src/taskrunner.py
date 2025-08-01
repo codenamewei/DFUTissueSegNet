@@ -19,7 +19,7 @@ from woundlib.thirdpartymodel.segmentation_models_pytorch.utils import losses, b
 from woundlib.thirdpartymodel.segmentation_models_pytorch.utils import metrics as metricsutil
 from woundlib.thirdpartymodel.segmentation_models_pytorch.decoders.unet import model
 from woundlib.thirdpartymodel.segmentation_models_pytorch import encoders
-from woundlib.thirdpartymodel.segmentation_models_pytorch import modelutils
+from woundlib.thirdpartymodel.segmentation_models_pytorch.utils import modelutils
 import random
 import matplotlib.pyplot as plt
 import os
