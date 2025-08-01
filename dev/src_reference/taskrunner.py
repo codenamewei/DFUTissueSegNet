@@ -4,7 +4,7 @@
 import numpy as np
 
 from typing import Iterator, Tuple
-
+from logging import getLogger
 from openfl.federated import PyTorchTaskRunner
 from openfl.utilities import Metric
 
@@ -14,6 +14,9 @@ from src.cnn_model import DigitRecognizerCNN, train_epoch, validate
 import logging
 import torch
 import os
+
+logger = getLogger(__name__)
+
 
 class TemplateTaskRunner(PyTorchTaskRunner):
     """Template Task Runner for PyTorch.
@@ -89,7 +92,7 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         os.makedirs(save_dir, exist_ok=True)
         model_path = os.path.join(save_dir,  f"{self.collaborator_name}.pth")#f"{self.collaborator_name}_round{self.round_num}.pth")
         torch.save(self.model.state_dict(), model_path)
-
+        logger.info(f"Model saved to {model_path}")
 
         return Metric(name="dice_loss + focal_loss", value=np.array(loss))
 
