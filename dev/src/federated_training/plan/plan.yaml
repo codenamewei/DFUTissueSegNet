@@ -6,7 +6,7 @@ aggregator:
     last_state_path: save/last.pbuf
     persist_checkpoint: false
     persistent_db_path: local_state/tensor.db
-    rounds_to_train: 2
+    rounds_to_train: 180
     write_logs: true
   template: openfl.component.aggregator.Aggregator
 assigner:
@@ -71,7 +71,7 @@ tasks:
   train:
     function: train_task
     kwargs:
-      epochs: 2
+      epochs: 1
       metrics:
       - loss
 straggler_handling_policy:
@@ -80,8 +80,8 @@ straggler_handling_policy:
     straggler_cutoff_time: 15
   template: openfl.component.aggregator.straggler_handling.CutoffTimePolicy
 st:
-  model_name: mnist
+  model_name: dfusegnet
   aggregator_url: https://ms.agg01.symptomsquirrel.com
   portland_url: https://ms.collab01.symptomsquirrel.com
   seattle_url: https://ms.collab02.symptomsquirrel.com
-  write_to_api: False
+  write_to_api: True

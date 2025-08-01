@@ -201,6 +201,11 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         self.store_train_iou.append(train_logs["iou_score"])
         self.store_train_dice.append(train_logs["fscore"])
 
+        save_dir = "save"
+        os.makedirs(save_dir, exist_ok=True)
+        model_path = os.path.join(save_dir,  f"{self.collaborator_name}.pth")#f"{self.collaborator_name}_round{self.round_num}.pth")
+        torch.save(self.model.state_dict(), model_path)
+
         return Metric(name="dice_loss + focal_loss", value=np.array(train_logs[train_loss_key]))
     
     def validate_(

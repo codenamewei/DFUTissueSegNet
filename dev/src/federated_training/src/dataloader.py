@@ -165,8 +165,8 @@ class DFUTissueSegNetDataLoader(PyTorchDataLoader):
             default_mask=DEFAULT_MASK_VAL,
         )
 
-        self.train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=6)
-        self.valid_loader = DataLoader(valid_dataset, batch_size=self.batch_size, shuffle=False, num_workers=6)
+        self.train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=4)
+        self.valid_loader = DataLoader(valid_dataset, batch_size=self.batch_size, shuffle=False, num_workers=4)
 
         # Test dataloader ==============================================================
         # test_dataset = Dataset(
