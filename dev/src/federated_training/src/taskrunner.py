@@ -201,10 +201,8 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         self.store_train_iou.append(train_logs["iou_score"])
         self.store_train_dice.append(train_logs["fscore"])
 
-   
+        return Metric(name="dice_loss + focal_loss", value=np.array(train_logs[train_loss_key]))
     
-        return Metric(name="crossentropy_loss", value=np.array(train_loss_key))
-
     def validate_(
         self, validation_dataloader: Iterator[Tuple[np.ndarray, np.ndarray]]
     ) -> Metric:
