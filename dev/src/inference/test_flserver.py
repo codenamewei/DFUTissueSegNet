@@ -431,8 +431,6 @@ valid_epoch = train.ValidEpoch(
 # =================================== Inference ================================
 # Load model====================================================================
 checkpoint = torch.load(os.path.join(checkpointpath, 'collaborator.pth'))
-print(type(checkpoint))
-print(checkpoint)
 model.load_state_dict(checkpoint['state_dict'])
 optimizer.load_state_dict(checkpoint['optimizer'])
 
