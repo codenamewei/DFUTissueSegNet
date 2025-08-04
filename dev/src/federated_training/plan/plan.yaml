@@ -1,0 +1,87 @@
+aggregator:
+  settings:
+    best_state_path: save/best.pbuf
+    db_store_rounds: 2
+    init_state_path: save/init.pbuf
+    last_state_path: save/last.pbuf
+    persist_checkpoint: false
+    persistent_db_path: local_state/tensor.db
+    rounds_to_train: 180
+    write_logs: true
+  template: openfl.component.aggregator.Aggregator
+assigner:
+  settings:
+    task_groups:
+    - name: learning
+      percentage: 1.0
+      tasks:
+      - aggregated_model_validation
+      - train
+      - locally_tuned_model_validation
+    - name: evaluation
+      percentage: 0
+      tasks:
+      - aggregated_model_validation
+  template: openfl.component.RandomGroupedAssigner
+collaborator:
+  settings:
+    db_store_rounds: 1
+    opt_treatment: RESET
+    use_delta_updates: false
+    write_logs: true
+  template: openfl.component.collaborator.Collaborator
+compression_pipeline:
+  settings: {}
+  template: openfl.pipelines.NoCompressionPipeline
+data_loader:
+  settings:
+    batch_size: 16
+    num_classes: 4
+  template: src.dataloader.DFUTissueSegNetDataLoader
+network:
+  settings:
+    agg_addr: ms.agg01.symptomsquirrel.com
+    agg_port: 54467
+    cert_folder: cert
+    client_reconnect_interval: 5
+    enable_atomic_connections: false
+    hash_salt: auto
+    require_client_auth: true
+    transport_protocol: grpc
+    use_tls: false
+  template: openfl.federation.Network
+task_runner:
+  settings: 
+    num_classes: 4
+  template: src.taskrunner.TemplateTaskRunner
+tasks:
+  aggregated_model_validation:
+    function: validate_task
+    kwargs:
+      apply: global
+      metrics:
+      - acc
+  locally_tuned_model_validation:
+    function: validate_task
+    kwargs:
+      apply: local
+      metrics:
+      - acc
+  settings: {}
+  train:
+    function: train_task
+    kwargs:
+      epochs: 1
+      metrics:
+      - loss
+straggler_handling_policy:
+  settings:
+    minimum_reporting: 1
+    straggler_cutoff_time: 15
+  template: openfl.component.aggregator.straggler_handling.CutoffTimePolicy
+st:
+  model_name: dfusegnet
+  aggregator_url: https://ms.agg01.symptomsquirrel.com
+  portland_url: https://ms.collab01.symptomsquirrel.com
+  seattle_url: https://ms.collab02.symptomsquirrel.com
+  write_to_api: True
