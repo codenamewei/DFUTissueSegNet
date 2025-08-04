@@ -150,6 +150,8 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         self.store_train_iou, self.store_val_iou = [], []
         self.store_train_dice, self.store_val_dice = [], []
 
+        self.after_train = False
+
 
 
     def forward(self, x):
@@ -207,6 +209,7 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         modelutils.save(model_path, self.model.state_dict(), self.optimizer.state_dict())
 
 
+        self.after_train = True
         #----------------------------------------------------------
         logger.info("[CW DEBUGGING] clear train_dataloader cache...")
         import psutil, os
@@ -276,12 +279,14 @@ class TemplateTaskRunner(PyTorchTaskRunner):
 
 
         #----------------------------------------------------------
-        logger.info("[CW DEBUGGING] clear validation_dataloader cache...")
-        import psutil, os
-        process = psutil.Process(os.getpid())
-        logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
-        del train_dataloader
-        logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
+        if self.after_train:
+            logger.info("[CW DEBUGGING] clear validation_dataloader cache...")
+            import psutil, os
+            process = psutil.Process(os.getpid())
+            logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
+            del validation_dataloader
+            logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
+            self.after_train = False
         #----------------------------------------------------------
    
         return Metric(name="accuracy", value=np.array(valid_logs["iou_score"])) # FIXME , not sure if its true
