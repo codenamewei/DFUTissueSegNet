@@ -21,11 +21,8 @@ from woundlib.thirdpartymodel.segmentation_models_pytorch.decoders.unet import m
 from woundlib.thirdpartymodel.segmentation_models_pytorch import encoders
 from woundlib.thirdpartymodel.segmentation_models_pytorch.utils import modelutils
 import random
-import matplotlib.pyplot as plt
-import os
-from copy import deepcopy
-from datetime import datetime
-import gc
+import psutil
+
 
 
 logger = getLogger(__name__)
@@ -212,7 +209,6 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         self.after_train = True
         #----------------------------------------------------------
         logger.info("[CW DEBUGGING] clear train_dataloader cache...")
-        import psutil, os
         process = psutil.Process(os.getpid())
         logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
         del train_dataloader
@@ -281,7 +277,6 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         #----------------------------------------------------------
         if self.after_train:
             logger.info("[CW DEBUGGING] clear validation_dataloader cache...")
-            import psutil, os
             process = psutil.Process(os.getpid())
             logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
             del validation_dataloader
