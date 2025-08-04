@@ -69,7 +69,6 @@ class TemplateTaskRunner(PyTorchTaskRunner):
 
         self.device = device
 
-        self.load_model(clear_cache = False)
 
         seed = random.randint(0, 5000)
         
@@ -84,7 +83,6 @@ class TemplateTaskRunner(PyTorchTaskRunner):
 
         self.num_classes = num_classes
         self.load_model(clear_cache = False)
-
         
 
         # Loss function
