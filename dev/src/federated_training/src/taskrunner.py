@@ -80,7 +80,6 @@ class TemplateTaskRunner(PyTorchTaskRunner):
             decoder_attention_type='pscse',
         )
 
-        self.epoch = 0
         preprocessing_fn = encoders.get_preprocessing_fn(ENCODER, ENCODER_WEIGHTS)
 
         self.model.to(device)
@@ -191,7 +190,7 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         # Implement training logic here and return a Metric object with the training loss.
         # Replace the following placeholder with actual training code.
 
-        logger.info(f"Train current epoch: {self.epoch}...")
+        logger.info(f"Train current epoch...")
         train_logs = self.train_epoch.run(train_dataloader)
 
         # Store losses and metrics
@@ -224,7 +223,7 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         # Replace the following placeholder with actual validation code.
 
 
-        logger.info(f"Validate current epoch: {self.epoch}...")
+        logger.info(f"Validate current epoch...")
 
         valid_logs = self.valid_epoch.run(validation_dataloader)
 
@@ -238,7 +237,7 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         # Track best performance, and save the model's state
         if  self.best_vloss > valid_logs[val_loss_key]:
             self.best_vloss = valid_logs[val_loss_key]
-            logger.info(f'Validation loss reduced. Saving the model at epoch: {self.epoch:04d}')
+            logger.info(f'Validation loss reduced. Saving the model.')
             self.cnt_patience = 0 # reset patience
             # best_model_epoch = self.epoch
             this_epoch_save_model = True
@@ -246,7 +245,7 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         # Compare iou score
         elif self.best_viou < valid_logs['iou_score']:
             self.best_viou = valid_logs['iou_score']
-            logger.info(f'Validation IoU increased. Saving the model at epoch: {self.epoch:04d}.')
+            logger.info(f'Validation IoU increased. Saving the model at epoch.')
             self.cnt_patience = 0 # reset patience
             # best_model_epoch = self.epoch
             this_epoch_save_model = True
@@ -263,8 +262,6 @@ class TemplateTaskRunner(PyTorchTaskRunner):
             os.makedirs(save_dir, exist_ok=True)
             model_path = os.path.join(save_dir,  f"{self.collaborator_name}.pth")#f"{self.collaborator_name}_round{self.round_num}.pth")
             torch.save(self.model.state_dict(), model_path)
-
-        self.epoch += 1
 
 
         return Metric(name="accuracy", value=np.array(valid_logs["iou_score"])) # FIXME , not sure if its true
