@@ -83,6 +83,8 @@ class TemplateTaskRunner(PyTorchTaskRunner):
 
         self.load_model(clear_cache = False)
 
+        self.num_classes = num_classes
+
         # Loss function
         dice_loss = losses.DiceLoss()
         focal_loss = losses.FocalLoss()
