@@ -270,9 +270,14 @@ class TemplateTaskRunner(PyTorchTaskRunner):
 
         if self.clear_cache:
             logger.info("[CW DEBUGGING] clear cache...")
+            
+            import psutil, os
+            process = psutil.Process(os.getpid())
+            logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
             self.free_up_memory()
 
             self.clear_cache = False
+            logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
 
         return Metric(name="accuracy", value=np.array(valid_logs["iou_score"])) # FIXME , not sure if its true
         #return Metric(name="accuracy", value=np.array(accuracy))
