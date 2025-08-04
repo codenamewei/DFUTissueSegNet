@@ -150,8 +150,6 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         self.store_train_iou, self.store_val_iou = [], []
         self.store_train_dice, self.store_val_dice = [], []
 
-        self.clear_cache = False
-
 
 
     def forward(self, x):
@@ -208,7 +206,15 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         model_path = os.path.join(save_dir,  f"{self.collaborator_name}.pth")#f"{self.collaborator_name}_round{self.round_num}.pth")
         modelutils.save(model_path, self.model.state_dict(), self.optimizer.state_dict())
 
-        self.clear_cache = True
+
+        #----------------------------------------------------------
+        logger.info("[CW DEBUGGING] clear train_dataloader cache...")
+        import psutil, os
+        process = psutil.Process(os.getpid())
+        logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
+        del train_dataloader
+        logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
+        #----------------------------------------------------------
 
         return Metric(name="dice_loss + focal_loss", value=np.array(train_logs[train_loss_key]))
     
@@ -268,22 +274,15 @@ class TemplateTaskRunner(PyTorchTaskRunner):
             model_path = os.path.join(save_dir,  f"{self.collaborator_name}.pth")#f"{self.collaborator_name}_round{self.round_num}.pth")
             torch.save(self.model.state_dict(), model_path)
 
-        if self.clear_cache:
-            logger.info("[CW DEBUGGING] clear cache...")
-            
-            import psutil, os
-            process = psutil.Process(os.getpid())
-            logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
-            self.free_up_memory()
 
-            self.clear_cache = False
-            logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
-
+        #----------------------------------------------------------
+        logger.info("[CW DEBUGGING] clear validation_dataloader cache...")
+        import psutil, os
+        process = psutil.Process(os.getpid())
+        logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
+        del train_dataloader
+        logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
+        #----------------------------------------------------------
+   
         return Metric(name="accuracy", value=np.array(valid_logs["iou_score"])) # FIXME , not sure if its true
         #return Metric(name="accuracy", value=np.array(accuracy))
-
-    def free_up_memory(self):
-
-        # 🔻🧹 4. CLEANUP: do this at the end of the round
-        del self.model
-        gc.collect()
