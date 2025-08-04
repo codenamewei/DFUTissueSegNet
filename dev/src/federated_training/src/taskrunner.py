@@ -22,7 +22,7 @@ from woundlib.thirdpartymodel.segmentation_models_pytorch import encoders
 from woundlib.thirdpartymodel.segmentation_models_pytorch.utils import modelutils
 import random
 import psutil
-
+import gc
 
 
 logger = getLogger(__name__)
@@ -207,13 +207,7 @@ class TemplateTaskRunner(PyTorchTaskRunner):
 
 
         self.after_train = True
-        #----------------------------------------------------------
-        logger.info("[CW DEBUGGING] clear train_dataloader cache...")
-        process = psutil.Process(os.getpid())
-        logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
-        del train_dataloader
-        logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
-        #----------------------------------------------------------
+        
 
         return Metric(name="dice_loss + focal_loss", value=np.array(train_logs[train_loss_key]))
     
@@ -279,7 +273,7 @@ class TemplateTaskRunner(PyTorchTaskRunner):
             logger.info("[CW DEBUGGING] clear validation_dataloader cache...")
             process = psutil.Process(os.getpid())
             logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
-            del validation_dataloader
+            gc.collect()
             logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
             self.after_train = False
         #----------------------------------------------------------

@@ -92,6 +92,8 @@ class DFUTissueSegNetDataLoader(PyTorchDataLoader):
 
     def generate_data_loader(self):
 
+        logger.info("[CW DEBUGGING] generate_data_loader...")
+
         if not self.data_path:
             return
 
