@@ -81,9 +81,11 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         torch.cuda.manual_seed_all(seed)
         np.random.seed(seed)
 
-        self.load_model(clear_cache = False)
 
         self.num_classes = num_classes
+        self.load_model(clear_cache = False)
+
+        
 
         # Loss function
         dice_loss = losses.DiceLoss()
