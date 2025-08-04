@@ -66,38 +66,13 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         self.collaborator_name = os.getenv("COLLABORATOR_NAME", "collaborator")
         logger.info(f"[INFO] TaskRunner initialized for: {self.collaborator_name}")
 
-        self.num_classes = num_classes
 
-        # create segmentation model with pretrained encoder
-        self.model = model.Unet(
-            encoder_name=ENCODER,
-            encoder_weights=ENCODER_WEIGHTS,
-            # aux_params=aux_params,
-            classes=self.num_classes,
-            activation=ACTIVATION,
-            decoder_attention_type='pscse',
-        )
+        self.device = device
 
-        preprocessing_fn = encoders.get_preprocessing_fn(ENCODER, ENCODER_WEIGHTS)
-
-        self.model.to(device)
-
-
-        # Optimizer
-        self.optimizer = torch.optim.Adam([
-            dict(params=self.model.parameters(), lr=LR, weight_decay=WEIGHT_DECAY),
-        ])
-
-        # Learning rate scheduler
-        self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer,
-                                    factor=0.1,
-                                    mode='min',
-                                    patience=10,
-                                    min_lr=0.00001#,
-                                    #verbose=True,
-                                    )
+        self.load_model(clear_cache = False)
 
         seed = random.randint(0, 5000)
+        
 
         logger.info(f'seed: {seed}')
 
@@ -105,6 +80,8 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         torch.cuda.manual_seed(seed)
         torch.cuda.manual_seed_all(seed)
         np.random.seed(seed)
+
+        self.load_model(clear_cache = False)
 
         # Loss function
         dice_loss = losses.DiceLoss()
@@ -124,7 +101,7 @@ class TemplateTaskRunner(PyTorchTaskRunner):
             loss=total_loss,
             metrics=metrics,
             optimizer=self.optimizer,
-            device=device,
+            device=self.device,
             verbose=True,
         )
 
@@ -132,7 +109,7 @@ class TemplateTaskRunner(PyTorchTaskRunner):
             self.model,
             loss=total_loss,
             metrics=metrics,
-            device=device,
+            device=self.device,
             verbose=True,
         )
 
@@ -214,6 +191,7 @@ class TemplateTaskRunner(PyTorchTaskRunner):
     def validate_(
         self, validation_dataloader: Iterator[Tuple[np.ndarray, np.ndarray]]
     ) -> Metric:
+        
         """Single validation epoch.
 
         Args:
@@ -273,10 +251,48 @@ class TemplateTaskRunner(PyTorchTaskRunner):
             logger.info("[CW DEBUGGING] clear validation_dataloader cache...")
             process = psutil.Process(os.getpid())
             logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
-            gc.collect()
+            self.load_model(clear_cache = True)
             logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
             self.after_train = False
         #----------------------------------------------------------
    
         return Metric(name="accuracy", value=np.array(valid_logs["iou_score"])) # FIXME , not sure if its true
         #return Metric(name="accuracy", value=np.array(accuracy))
+
+
+    def load_model(self, clear_cache : bool):
+
+        if clear_cache:
+
+            del self.model, self.optimizer, self.scheduler
+
+        
+
+        # create segmentation model with pretrained encoder
+        self.model = model.Unet(
+            encoder_name=ENCODER,
+            encoder_weights=ENCODER_WEIGHTS,
+            # aux_params=aux_params,
+            classes=self.num_classes,
+            activation=ACTIVATION,
+            decoder_attention_type='pscse',
+        )
+
+        preprocessing_fn = encoders.get_preprocessing_fn(ENCODER, ENCODER_WEIGHTS)
+
+        self.model.to(self.device)
+
+
+        # Optimizer
+        self.optimizer = torch.optim.Adam([
+            dict(params=self.model.parameters(), lr=LR, weight_decay=WEIGHT_DECAY),
+        ])
+
+        # Learning rate scheduler
+        self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer,
+                                    factor=0.1,
+                                    mode='min',
+                                    patience=10,
+                                    min_lr=0.00001#,
+                                    #verbose=True,
+                                    )
