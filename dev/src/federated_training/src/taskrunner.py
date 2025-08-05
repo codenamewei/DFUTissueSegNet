@@ -122,7 +122,10 @@ class TemplateTaskRunner(PyTorchTaskRunner):
 
         logger.info(f"Train current epoch...")
         train_epoch = self.get_train_epoch()
+        logger.info(f"Before training loop: {process.memory_info().rss / 1e6:.2f} MB")
         train_logs = train_epoch.run(train_dataloader)
+        logger.info(f"After training loop: {process.memory_info().rss / 1e6:.2f} MB")
+    
 
         # Store losses and metrics
         train_loss_key = list(train_logs.keys())[0] # first key is for loss
@@ -173,7 +176,10 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         logger.info(f"Validate current epoch...")
 
         valid_epoch = self.get_valid_epoch()
+        logger.info(f"Before validating loop: {process.memory_info().rss / 1e6:.2f} MB")
         valid_logs = valid_epoch.run(validation_dataloader)
+        logger.info(f"After validating loop: {process.memory_info().rss / 1e6:.2f} MB")
+        
 
         # Store losses and metrics
         val_loss_key = list(valid_logs.keys())[0] # first key is for loss
@@ -311,7 +317,7 @@ class TemplateTaskRunner(PyTorchTaskRunner):
             metrics=metrics,
             optimizer=self.optimizer,
             device=self.device,
-            verbose=True,
+            verbose=False,
         )
     
 
@@ -334,7 +340,7 @@ class TemplateTaskRunner(PyTorchTaskRunner):
             loss=total_loss,
             metrics=metrics,
             device=self.device,
-            verbose=True,
+            verbose=False,
         )
     
     
