@@ -121,7 +121,8 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         logger.info(f"**********Start training. Memory used: {process.memory_info().rss / 1e6:.2f} MB**********")
 
         logger.info(f"Train current epoch...")
-        train_logs = self.train_epoch.run(train_dataloader)
+        train_epoch = self.get_train_epoch()
+        train_logs = train_epoch.run(train_dataloader)
 
         # Store losses and metrics
         train_loss_key = list(train_logs.keys())[0] # first key is for loss
@@ -171,7 +172,8 @@ class TemplateTaskRunner(PyTorchTaskRunner):
 
         logger.info(f"Validate current epoch...")
 
-        valid_logs = self.valid_epoch.run(validation_dataloader)
+        valid_epoch = self.get_valid_epoch()
+        valid_logs = valid_epoch.run(validation_dataloader)
 
         # Store losses and metrics
         val_loss_key = list(valid_logs.keys())[0] # first key is for loss
@@ -241,10 +243,6 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         if clear_cache:
 
             del self.model, self.optimizer, self.scheduler
-            if hasattr(self, "train_epoch"):
-                del self.train_epoch
-            if hasattr(self, "valid_epoch"):
-                del self.valid_epoch
             gc.collect()
 
         logger.info("[CW DEBUGGING] load model...")
@@ -290,6 +288,11 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
 
 
+        
+
+
+    def get_train_epoch(self):
+
         # Loss function
         dice_loss = losses.DiceLoss()
         focal_loss = losses.FocalLoss()
@@ -301,13 +304,8 @@ class TemplateTaskRunner(PyTorchTaskRunner):
             metricsutil.Fscore(threshold=0.5),
         ]
 
-        # create epoch runners =========================================================
-        # it is a simple loop of iterating over dataloader`s samples
 
-        logger.info("[CW DEBUGGING] load self.train_epoch & self.valid_epoch...")
-        process = psutil.Process(os.getpid())
-        logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
-        self.train_epoch = train.TrainEpoch(
+        return train.TrainEpoch(
             self.model,
             loss=total_loss,
             metrics=metrics,
@@ -315,13 +313,28 @@ class TemplateTaskRunner(PyTorchTaskRunner):
             device=self.device,
             verbose=True,
         )
+    
 
-        self.valid_epoch = train.ValidEpoch(
+    def get_valid_epoch(self):
+
+        # Loss function
+        dice_loss = losses.DiceLoss()
+        focal_loss = losses.FocalLoss()
+        total_loss = base.SumOfLosses(dice_loss, focal_loss)
+
+        # Metrics
+        metrics = [
+            metricsutil.IoU(threshold=0.5),
+            metricsutil.Fscore(threshold=0.5),
+        ]
+
+
+        return train.ValidEpoch(
             self.model,
             loss=total_loss,
             metrics=metrics,
             device=self.device,
             verbose=True,
         )
-        logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
-
+    
+    
