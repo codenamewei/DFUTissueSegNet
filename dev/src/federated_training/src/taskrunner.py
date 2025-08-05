@@ -188,6 +188,7 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         process = psutil.Process(os.getpid())
         logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
         del train_dataloader
+        gc.collect()
         logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
         
         self.after_train = True
@@ -260,12 +261,14 @@ class TemplateTaskRunner(PyTorchTaskRunner):
             process = psutil.Process(os.getpid())
             logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
             del validation_dataloader
+            gc.collect()
             logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
 
             logger.info("[CW DEBUGGING] clear model cache...")
             process = psutil.Process(os.getpid())
             logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
             self.load_model(clear_cache = True)
+            
             logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
             self.after_train = False
         #----------------------------------------------------------
@@ -279,6 +282,7 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         if clear_cache:
 
             del self.model, self.optimizer, self.scheduler
+            gc.collect()
 
         
 
