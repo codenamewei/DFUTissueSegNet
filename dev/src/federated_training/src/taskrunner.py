@@ -199,7 +199,7 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         # Replace the following placeholder with actual validation code.
 
         process = psutil.Process(os.getpid())
-        logger.info(f"**********Start validate [Round {self.round_num}] Memory used: {process.memory_info().rss / 1e6:.2f} MB**********")
+        logger.info(f"**********Start validate. Memory used: {process.memory_info().rss / 1e6:.2f} MB**********")
 
 
         logger.info(f"Validate current epoch...")
