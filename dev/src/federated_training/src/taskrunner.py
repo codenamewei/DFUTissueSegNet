@@ -265,7 +265,6 @@ class TemplateTaskRunner(PyTorchTaskRunner):
             logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
 
             logger.info("[CW DEBUGGING] clear model cache...")
-            process = psutil.Process(os.getpid())
             logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
             self.load_model(clear_cache = True)
             
@@ -284,7 +283,9 @@ class TemplateTaskRunner(PyTorchTaskRunner):
             del self.model, self.optimizer, self.scheduler
             gc.collect()
 
-        
+        logger.info("[CW DEBUGGING] load model...")
+        process = psutil.Process(os.getpid())
+        logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
 
         # create segmentation model with pretrained encoder
         self.model = model.Unet(
@@ -296,15 +297,22 @@ class TemplateTaskRunner(PyTorchTaskRunner):
             decoder_attention_type='pscse',
         )
 
-        preprocessing_fn = encoders.get_preprocessing_fn(ENCODER, ENCODER_WEIGHTS)
+        #preprocessing_fn = encoders.get_preprocessing_fn(ENCODER, ENCODER_WEIGHTS)
 
         self.model.to(self.device)
+
+        logger.info("[CW DEBUGGING] load optimizer...")
+        logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
 
 
         # Optimizer
         self.optimizer = torch.optim.Adam([
             dict(params=self.model.parameters(), lr=LR, weight_decay=WEIGHT_DECAY),
         ])
+
+
+        logger.info("[CW DEBUGGING] load scheduler...")
+        logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
 
         # Learning rate scheduler
         self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer,
@@ -314,3 +322,5 @@ class TemplateTaskRunner(PyTorchTaskRunner):
                                     min_lr=0.00001#,
                                     #verbose=True,
                                     )
+
+        logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
