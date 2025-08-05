@@ -83,8 +83,6 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         self.num_classes = num_classes
         self.load_model(clear_cache = False)
         
-
-        
         self.after_train = False
 
         # Train ========================================================================
@@ -120,9 +118,9 @@ class TemplateTaskRunner(PyTorchTaskRunner):
 
         logger.info(f"Train current epoch...")
         train_epoch = self.get_train_epoch()
-        logger.info(f"Before training loop: {process.memory_info().rss / 1e6:.2f} MB")
+        logger.info(f"*******************Before training loop: {process.memory_info().rss / 1e6:.2f} MB*******************")
         train_logs = train_epoch.run(train_dataloader)
-        logger.info(f"After training loop: {process.memory_info().rss / 1e6:.2f} MB")
+        logger.info(f"*******************After training loop: {process.memory_info().rss / 1e6:.2f} MB*******************")
     
 
         # Store losses and metrics
@@ -167,9 +165,9 @@ class TemplateTaskRunner(PyTorchTaskRunner):
 
         valid_epoch = self.get_valid_epoch()
         process = psutil.Process(os.getpid())
-        logger.info(f"Before validating loop: {process.memory_info().rss / 1e6:.2f} MB")
+        logger.info(f"*******************Before validating loop: {process.memory_info().rss / 1e6:.2f} MB*******************")
         valid_logs = valid_epoch.run(validation_dataloader)
-        logger.info(f"After validating loop: {process.memory_info().rss / 1e6:.2f} MB")
+        logger.info(f"*******************After validating loop: {process.memory_info().rss / 1e6:.2f} MB*******************")
         
 
         # Store losses and metrics
@@ -220,7 +218,7 @@ class TemplateTaskRunner(PyTorchTaskRunner):
             
             self.after_train = False
         #----------------------------------------------------------
-        
+
    
         return Metric(name="accuracy", value=np.array(valid_logs["iou_score"])) # FIXME , not sure if its true
         #return Metric(name="accuracy", value=np.array(accuracy))
