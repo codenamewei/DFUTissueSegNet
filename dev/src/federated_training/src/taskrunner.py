@@ -159,9 +159,9 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         # Store losses and metrics
         train_loss_key = list(train_logs.keys())[0] # first key is for loss
 
-        self.store_train_loss.append(train_logs[train_loss_key])
-        self.store_train_iou.append(train_logs["iou_score"])
-        self.store_train_dice.append(train_logs["fscore"])
+        self.store_train_loss.append(train_logs[train_loss_key].item())
+        self.store_train_iou.append(train_logs["iou_score"].item())
+        self.store_train_dice.append(train_logs["fscore"].item())
 
         save_dir = "save"
         os.makedirs(save_dir, exist_ok=True)
@@ -209,13 +209,13 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         # Store losses and metrics
         val_loss_key = list(valid_logs.keys())[0] # first key is for loss
 
-        self.store_val_loss.append(valid_logs[val_loss_key])
-        self.store_val_iou.append(valid_logs["iou_score"])
-        self.store_val_dice.append(valid_logs["fscore"])
+        self.store_val_loss.append(valid_logs[val_loss_key].item())
+        self.store_val_iou.append(valid_logs["iou_score"].item())
+        self.store_val_dice.append(valid_logs["fscore"].item())
 
         # Track best performance, and save the model's state
         if  self.best_vloss > valid_logs[val_loss_key]:
-            self.best_vloss = valid_logs[val_loss_key]
+            self.best_vloss = valid_logs[val_loss_key].item()
             logger.info(f'Validation loss reduced. Saving the model.')
             self.cnt_patience = 0 # reset patience
             # best_model_epoch = self.epoch
@@ -223,7 +223,7 @@ class TemplateTaskRunner(PyTorchTaskRunner):
 
         # Compare iou score
         elif self.best_viou < valid_logs['iou_score']:
-            self.best_viou = valid_logs['iou_score']
+            self.best_viou = valid_logs['iou_score'].item()
             logger.info(f'Validation IoU increased. Saving the model at epoch.')
             self.cnt_patience = 0 # reset patience
             # best_model_epoch = self.epoch
@@ -274,6 +274,10 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         if clear_cache:
 
             del self.model, self.optimizer, self.scheduler
+            if hasattr(self, "train_epoch"):
+                del self.train_epoch
+            if hasattr(self, "valid_epoch"):
+                del self.valid_epoch
             gc.collect()
 
         logger.info("[CW DEBUGGING] load model...")
