@@ -18,6 +18,7 @@ from woundlib.thirdpartymodel.segmentation_models_pytorch import encoders
 import albumentations as albu
 import torch
 import torch.nn.functional as F
+import psutil
 
 logger = getLogger(__name__)
 
@@ -139,6 +140,11 @@ class DFUTissueSegNetDataLoader(PyTorchDataLoader):
         preprocessing_fn = encoders.get_preprocessing_fn('mit_b3', "imagenet")#ENCODER, ENCODER_WEIGHTS)
 
         # Dataloader ===================================================================
+
+        logger.info("[CW DEBUGGING] load Dataset...")
+        process = psutil.Process(os.getpid())
+        logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
+
         train_dataset = Dataset(
             list_IDs_train,
             x_train_dir,
@@ -165,8 +171,16 @@ class DFUTissueSegNetDataLoader(PyTorchDataLoader):
             default_mask=DEFAULT_MASK_VAL,
         )
 
+        logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
+
+        logger.info("[CW DEBUGGING] load DataLoader...")
+        process = psutil.Process(os.getpid())
+        logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
         self.train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=4)
         self.valid_loader = DataLoader(valid_dataset, batch_size=self.batch_size, shuffle=False, num_workers=4)
+        logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
+        
+
 
         # Test dataloader ==============================================================
         # test_dataset = Dataset(
