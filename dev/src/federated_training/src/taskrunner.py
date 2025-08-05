@@ -151,7 +151,7 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         # Replace the following placeholder with actual training code.
 
         process = psutil.Process(os.getpid())
-        logger.info(f"Start training [Round {self.round_num}] Memory used: {process.memory_info().rss / 1e6:.2f} MB")
+        logger.info(f"**********Start training. Memory used: {process.memory_info().rss / 1e6:.2f} MB**********")
 
         logger.info(f"Train current epoch...")
         train_logs = self.train_epoch.run(train_dataloader)
@@ -178,7 +178,7 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         self.after_train = True
         
         
-        logger.info(f"Finish training [Round {self.round_num}] Memory used: {process.memory_info().rss / 1e6:.2f} MB")
+        logger.info(f"**********Finish training Memory used: {process.memory_info().rss / 1e6:.2f} MB**********")
 
         return Metric(name="dice_loss + focal_loss", value=np.array(train_logs[train_loss_key]))
     
@@ -199,7 +199,7 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         # Replace the following placeholder with actual validation code.
 
         process = psutil.Process(os.getpid())
-        logger.info(f"Start validate [Round {self.round_num}] Memory used: {process.memory_info().rss / 1e6:.2f} MB")
+        logger.info(f"**********Start validate [Round {self.round_num}] Memory used: {process.memory_info().rss / 1e6:.2f} MB**********")
 
 
         logger.info(f"Validate current epoch...")
@@ -262,7 +262,7 @@ class TemplateTaskRunner(PyTorchTaskRunner):
             self.after_train = False
         #----------------------------------------------------------
         
-        logger.info(f"Finish validate:[Round {self.round_num}] Memory used: {process.memory_info().rss / 1e6:.2f} MB")
+        logger.info(f"**********Finish validate: Memory used: {process.memory_info().rss / 1e6:.2f} MB**********")
 
    
         return Metric(name="accuracy", value=np.array(valid_logs["iou_score"])) # FIXME , not sure if its true
