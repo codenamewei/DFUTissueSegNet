@@ -24,7 +24,6 @@ import random
 import psutil
 import gc
 
-import tracemalloc
 logger = getLogger(__name__)
 
 ENCODER = 'mit_b3'
@@ -167,6 +166,7 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         logger.info(f"Validate current epoch...")
 
         valid_epoch = self.get_valid_epoch()
+        process = psutil.Process(os.getpid())
         logger.info(f"Before validating loop: {process.memory_info().rss / 1e6:.2f} MB")
         valid_logs = valid_epoch.run(validation_dataloader)
         logger.info(f"After validating loop: {process.memory_info().rss / 1e6:.2f} MB")
