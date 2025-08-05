@@ -142,23 +142,11 @@ class DFUTissueSegNetDataLoader(PyTorchDataLoader):
         DEFAULT_IMG_VAL = cv2.imread(os.path.join(x_valid_dir, list_IDs_val[0]))[:,:,::-1]
         DEFAULT_MASK_VAL = cv2.imread(os.path.join(y_valid_dir, list_IDs_val[0]), 0)
 
-        logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
-
-
-
-        logger.info("[CW DEBUGGING] encoders.get_preprocessing_fn()...")
-
-        process = psutil.Process(os.getpid())
         preprocessing_fn = encoders.get_preprocessing_fn('mit_b3', "imagenet")#ENCODER, ENCODER_WEIGHTS)
 
-        logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
 
 
         # Dataloader ===================================================================
-
-        logger.info("[CW DEBUGGING] load Dataset...")
-        
-        logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
 
         train_dataset = Dataset(
             list_IDs_train,
@@ -186,17 +174,10 @@ class DFUTissueSegNetDataLoader(PyTorchDataLoader):
             default_mask=DEFAULT_MASK_VAL,
         )
 
-        logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
-
-        logger.info("[CW DEBUGGING] load DataLoader...")
-        process = psutil.Process(os.getpid())
-        logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
         self.train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=4, persistent_workers=False,
 pin_memory=False)
         self.valid_loader = DataLoader(valid_dataset, batch_size=self.batch_size, shuffle=False, num_workers=4, persistent_workers=False,
-pin_memory=False)
-        logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
-        
+pin_memory=False)        
 
 
         # Test dataloader ==============================================================
