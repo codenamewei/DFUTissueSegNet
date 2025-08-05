@@ -98,6 +98,10 @@ class TemplateTaskRunner(PyTorchTaskRunner):
 
         # create epoch runners =========================================================
         # it is a simple loop of iterating over dataloader`s samples
+
+        logger.info("[CW DEBUGGING] load self.train_epoch & self.valid_epoch...")
+        process = psutil.Process(os.getpid())
+        logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
         self.train_epoch = train.TrainEpoch(
             self.model,
             loss=total_loss,
@@ -114,6 +118,7 @@ class TemplateTaskRunner(PyTorchTaskRunner):
             device=self.device,
             verbose=True,
         )
+        logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
 
         # Train ========================================================================
         # train model for N epochs
