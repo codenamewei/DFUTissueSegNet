@@ -85,40 +85,8 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         self.load_model(clear_cache = False)
         
 
-        # Loss function
-        dice_loss = losses.DiceLoss()
-        focal_loss = losses.FocalLoss()
-        total_loss = base.SumOfLosses(dice_loss, focal_loss)
-
-        # Metrics
-        metrics = [
-            metricsutil.IoU(threshold=0.5),
-            metricsutil.Fscore(threshold=0.5),
-        ]
-
-        # create epoch runners =========================================================
-        # it is a simple loop of iterating over dataloader`s samples
-
-        logger.info("[CW DEBUGGING] load self.train_epoch & self.valid_epoch...")
-        process = psutil.Process(os.getpid())
-        logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
-        self.train_epoch = train.TrainEpoch(
-            self.model,
-            loss=total_loss,
-            metrics=metrics,
-            optimizer=self.optimizer,
-            device=self.device,
-            verbose=True,
-        )
-
-        self.valid_epoch = train.ValidEpoch(
-            self.model,
-            loss=total_loss,
-            metrics=metrics,
-            device=self.device,
-            verbose=True,
-        )
-        logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
+        
+        self.after_train = False
 
         # Train ========================================================================
         # train model for N epochs
@@ -131,7 +99,6 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         self.store_train_iou, self.store_val_iou = [], []
         self.store_train_dice, self.store_val_dice = [], []
 
-        self.after_train = False
 
 
 
@@ -321,3 +288,40 @@ class TemplateTaskRunner(PyTorchTaskRunner):
                                     )
 
         logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
+
+
+        # Loss function
+        dice_loss = losses.DiceLoss()
+        focal_loss = losses.FocalLoss()
+        total_loss = base.SumOfLosses(dice_loss, focal_loss)
+
+        # Metrics
+        metrics = [
+            metricsutil.IoU(threshold=0.5),
+            metricsutil.Fscore(threshold=0.5),
+        ]
+
+        # create epoch runners =========================================================
+        # it is a simple loop of iterating over dataloader`s samples
+
+        logger.info("[CW DEBUGGING] load self.train_epoch & self.valid_epoch...")
+        process = psutil.Process(os.getpid())
+        logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
+        self.train_epoch = train.TrainEpoch(
+            self.model,
+            loss=total_loss,
+            metrics=metrics,
+            optimizer=self.optimizer,
+            device=self.device,
+            verbose=True,
+        )
+
+        self.valid_epoch = train.ValidEpoch(
+            self.model,
+            loss=total_loss,
+            metrics=metrics,
+            device=self.device,
+            verbose=True,
+        )
+        logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
+
