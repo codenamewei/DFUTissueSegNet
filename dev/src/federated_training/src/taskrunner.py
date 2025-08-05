@@ -121,7 +121,7 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         train_epoch = self.get_train_epoch()
         train_logs = train_epoch.run(train_dataloader)
         logger.info(f"[Train End] RAM used: {process.memory_info().rss / 1e6:.2f} MB")
-    
+        logger.info(train_logs)
 
         # Store losses and metrics
         train_loss_key = list(train_logs.keys())[0] # first key is for loss
