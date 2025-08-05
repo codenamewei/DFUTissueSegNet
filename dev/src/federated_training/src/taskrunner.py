@@ -21,8 +21,8 @@ from woundlib.thirdpartymodel.segmentation_models_pytorch.decoders.unet import m
 from woundlib.thirdpartymodel.segmentation_models_pytorch import encoders
 from woundlib.thirdpartymodel.segmentation_models_pytorch.utils import modelutils
 import random
-import psutil
 import gc
+import psutil
 
 logger = getLogger(__name__)
 
@@ -114,13 +114,13 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         # Implement training logic here and return a Metric object with the training loss.
         # Replace the following placeholder with actual training code.
 
-        process = psutil.Process(os.getpid())
-
         logger.info(f"Train current epoch...")
+        
+        process = psutil.Process()
+        logger.info(f"[Train Start] RAM used: {process.memory_info().rss / 1e6:.2f} MB")
         train_epoch = self.get_train_epoch()
-        logger.info(f"*******************Before training loop: {process.memory_info().rss / 1e6:.2f} MB*******************")
         train_logs = train_epoch.run(train_dataloader)
-        logger.info(f"*******************After training loop: {process.memory_info().rss / 1e6:.2f} MB*******************")
+        logger.info(f"[Train End] RAM used: {process.memory_info().rss / 1e6:.2f} MB")
     
 
         # Store losses and metrics
@@ -135,13 +135,15 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         model_path = os.path.join(save_dir,  f"{self.collaborator_name}.pth")#f"{self.collaborator_name}_round{self.round_num}.pth")
         modelutils.save(model_path, self.model.state_dict(), self.optimizer.state_dict())
 
+        #-------------------------------
         torch.utils.data.dataloader._DataLoader__initialized = False
         del train_dataloader
         gc.collect()
         
         self.after_train = True
-        
 
+        #-------------------------------
+        
         return Metric(name="dice_loss + focal_loss", value=np.array(train_logs[train_loss_key]))
     
     def validate_(
@@ -164,10 +166,7 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         logger.info(f"Validate current epoch...")
 
         valid_epoch = self.get_valid_epoch()
-        process = psutil.Process(os.getpid())
-        logger.info(f"*******************Before validating loop: {process.memory_info().rss / 1e6:.2f} MB*******************")
         valid_logs = valid_epoch.run(validation_dataloader)
-        logger.info(f"*******************After validating loop: {process.memory_info().rss / 1e6:.2f} MB*******************")
         
 
         # Store losses and metrics
@@ -210,7 +209,6 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         #----------------------------------------------------------
         if self.after_train:
 
-            process = psutil.Process(os.getpid())
             torch.utils.data.dataloader._DataLoader__initialized = False
             del validation_dataloader
             gc.collect()
@@ -219,7 +217,6 @@ class TemplateTaskRunner(PyTorchTaskRunner):
             self.after_train = False
         #----------------------------------------------------------
 
-   
         return Metric(name="accuracy", value=np.array(valid_logs["iou_score"])) # FIXME , not sure if its true
         #return Metric(name="accuracy", value=np.array(accuracy))
 

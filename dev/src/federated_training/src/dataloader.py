@@ -3,7 +3,7 @@
 #----------------------------------------------------------------------------
 # Created By  : cw
 # Created Date: 2025-07-28
-# Updated Date: 2025-07-28
+# Updated Date: 2025-08-05
 # ---------------------------------------------------------------------------
 from logging import getLogger
 
@@ -179,23 +179,6 @@ pin_memory=False)
         self.valid_loader = DataLoader(valid_dataset, batch_size=self.batch_size, shuffle=False, num_workers=4, persistent_workers=False,
 pin_memory=False)        
 
-
-        # Test dataloader ==============================================================
-        # test_dataset = Dataset(
-        #     list_IDs_test,
-        #     x_test_dir,
-        #     y_test_dir,
-        #     augmentation=get_validation_augmentation(),
-        #     preprocessing=get_preprocessing(preprocessing_fn),
-        #     resize=(self.RESIZE),
-        #     to_categorical=False, # don't convert to onehot now
-        #     n_classes=self.n_classes,
-        # )
-
-        # test_dataloader = DataLoader(test_dataset,
-        #                             batch_size=1,
-        #                             shuffle=False,
-        #                             num_workers=6)
 
 # Create a function to read names from a text file, and add extensions
 def _read_names(txt_file, ext=".png"):
