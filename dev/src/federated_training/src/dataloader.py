@@ -109,6 +109,12 @@ class DFUTissueSegNetDataLoader(PyTorchDataLoader):
         random.seed(seed) # seed for random number generator
         random.shuffle(list_IDs_train) # shuffle train names
 
+        logger.info("[CW DEBUGGING] Load Data...")
+        process = psutil.Process(os.getpid())
+        logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
+
+
+
         logger.info(f'No. of training images: {len(list_IDs_train)}')
         logger.info(f'No. of validation images: {len(list_IDs_val)}')
         #logger.info('No. of test images: ', len(list_IDs_test))
@@ -136,13 +142,22 @@ class DFUTissueSegNetDataLoader(PyTorchDataLoader):
         DEFAULT_IMG_VAL = cv2.imread(os.path.join(x_valid_dir, list_IDs_val[0]))[:,:,::-1]
         DEFAULT_MASK_VAL = cv2.imread(os.path.join(y_valid_dir, list_IDs_val[0]), 0)
 
+        logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
 
+
+
+        logger.info("[CW DEBUGGING] encoders.get_preprocessing_fn()...")
+        
+        process = psutil.Process(os.getpid())
         preprocessing_fn = encoders.get_preprocessing_fn('mit_b3', "imagenet")#ENCODER, ENCODER_WEIGHTS)
+
+        logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
+
 
         # Dataloader ===================================================================
 
         logger.info("[CW DEBUGGING] load Dataset...")
-        process = psutil.Process(os.getpid())
+        
         logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
 
         train_dataset = Dataset(
