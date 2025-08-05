@@ -24,7 +24,7 @@ import random
 import psutil
 import gc
 
-
+import tracemalloc
 logger = getLogger(__name__)
 
 ENCODER = 'mit_b3'
@@ -123,7 +123,13 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         logger.info(f"Train current epoch...")
         train_epoch = self.get_train_epoch()
         logger.info(f"Before training loop: {process.memory_info().rss / 1e6:.2f} MB")
+        
+
+        tracemalloc.start()
+
         train_logs = train_epoch.run(train_dataloader)
+        logger.info(tracemalloc.get_traced_memory())
+        tracemalloc.stop()
         logger.info(f"After training loop: {process.memory_info().rss / 1e6:.2f} MB")
     
 
