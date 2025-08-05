@@ -71,7 +71,7 @@ tasks:
   train:
     function: train_task
     kwargs:
-      epochs: 1
+      epochs: 1 
       metrics:
       - loss
 straggler_handling_policy:

@@ -21,11 +21,8 @@ from woundlib.thirdpartymodel.segmentation_models_pytorch.decoders.unet import m
 from woundlib.thirdpartymodel.segmentation_models_pytorch import encoders
 from woundlib.thirdpartymodel.segmentation_models_pytorch.utils import modelutils
 import random
-import matplotlib.pyplot as plt
-import os
-from copy import deepcopy
-from datetime import datetime
-
+import gc
+import psutil
 
 logger = getLogger(__name__)
 
@@ -68,39 +65,12 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         self.collaborator_name = os.getenv("COLLABORATOR_NAME", "collaborator")
         logger.info(f"[INFO] TaskRunner initialized for: {self.collaborator_name}")
 
-        self.num_classes = num_classes
 
-        # create segmentation model with pretrained encoder
-        self.model = model.Unet(
-            encoder_name=ENCODER,
-            encoder_weights=ENCODER_WEIGHTS,
-            # aux_params=aux_params,
-            classes=self.num_classes,
-            activation=ACTIVATION,
-            decoder_attention_type='pscse',
-        )
+        self.device = device
 
-        self.epoch = 0
-        preprocessing_fn = encoders.get_preprocessing_fn(ENCODER, ENCODER_WEIGHTS)
-
-        self.model.to(device)
-
-
-        # Optimizer
-        self.optimizer = torch.optim.Adam([
-            dict(params=self.model.parameters(), lr=LR, weight_decay=WEIGHT_DECAY),
-        ])
-
-        # Learning rate scheduler
-        self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer,
-                                    factor=0.1,
-                                    mode='min',
-                                    patience=10,
-                                    min_lr=0.00001#,
-                                    #verbose=True,
-                                    )
 
         seed = random.randint(0, 5000)
+        
 
         logger.info(f'seed: {seed}')
 
@@ -109,35 +79,11 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         torch.cuda.manual_seed_all(seed)
         np.random.seed(seed)
 
-        # Loss function
-        dice_loss = losses.DiceLoss()
-        focal_loss = losses.FocalLoss()
-        total_loss = base.SumOfLosses(dice_loss, focal_loss)
 
-        # Metrics
-        metrics = [
-            metricsutil.IoU(threshold=0.5),
-            metricsutil.Fscore(threshold=0.5),
-        ]
-
-        # create epoch runners =========================================================
-        # it is a simple loop of iterating over dataloader`s samples
-        self.train_epoch = train.TrainEpoch(
-            self.model,
-            loss=total_loss,
-            metrics=metrics,
-            optimizer=self.optimizer,
-            device=device,
-            verbose=True,
-        )
-
-        self.valid_epoch = train.ValidEpoch(
-            self.model,
-            loss=total_loss,
-            metrics=metrics,
-            device=device,
-            verbose=True,
-        )
+        self.num_classes = num_classes
+        self.load_model(clear_cache = False)
+        
+        self.after_train = False
 
         # Train ========================================================================
         # train model for N epochs
@@ -152,29 +98,6 @@ class TemplateTaskRunner(PyTorchTaskRunner):
 
 
 
-    def forward(self, x):
-        """
-        Defines the forward pass of the CNN model.
-
-        Args:
-            x (torch.Tensor): Input tensor of shape (N, C, H, W) where
-                              N is the batch size,
-                              C is the number of channels,
-                              H is the height, and
-                              W is the width.
-
-        Returns:
-            torch.Tensor: Output tensor after passing through the CNN layers.
-        """
-        x = F.relu(self.conv1(x))
-        x = F.max_pool2d(x, 2, 2)
-        x = F.relu(self.conv2(x))
-        x = F.max_pool2d(x, 2, 2)
-        x = x.view(-1, 800)
-        x = F.relu(self.fc1(x))
-        x = self.fc2(x)
-
-        return x
 
     def train_(
         self, train_dataloader: Iterator[Tuple[np.ndarray, np.ndarray]]
@@ -191,8 +114,14 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         # Implement training logic here and return a Metric object with the training loss.
         # Replace the following placeholder with actual training code.
 
-        logger.info(f"Train current epoch: {self.epoch}...")
-        train_logs = self.train_epoch.run(train_dataloader)
+        logger.info(f"Train current epoch...")
+        
+        process = psutil.Process()
+        logger.info(f"[Train Start] RAM used: {process.memory_info().rss / 1e6:.2f} MB")
+        train_epoch = self.get_train_epoch()
+        train_logs = train_epoch.run(train_dataloader)
+        logger.info(f"[Train End] RAM used: {process.memory_info().rss / 1e6:.2f} MB")
+        logger.info(train_logs)
 
         # Store losses and metrics
         train_loss_key = list(train_logs.keys())[0] # first key is for loss
@@ -206,11 +135,21 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         model_path = os.path.join(save_dir,  f"{self.collaborator_name}.pth")#f"{self.collaborator_name}_round{self.round_num}.pth")
         modelutils.save(model_path, self.model.state_dict(), self.optimizer.state_dict())
 
+        #-------------------------------
+        torch.utils.data.dataloader._DataLoader__initialized = False
+        del train_dataloader
+        gc.collect()
+        
+        self.after_train = True
+
+        #-------------------------------
+        
         return Metric(name="dice_loss + focal_loss", value=np.array(train_logs[train_loss_key]))
     
     def validate_(
         self, validation_dataloader: Iterator[Tuple[np.ndarray, np.ndarray]]
     ) -> Metric:
+        
         """Single validation epoch.
 
         Args:
@@ -224,9 +163,11 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         # Replace the following placeholder with actual validation code.
 
 
-        logger.info(f"Validate current epoch: {self.epoch}...")
+        logger.info(f"Validate current epoch...")
 
-        valid_logs = self.valid_epoch.run(validation_dataloader)
+        valid_epoch = self.get_valid_epoch()
+        valid_logs = valid_epoch.run(validation_dataloader)
+        
 
         # Store losses and metrics
         val_loss_key = list(valid_logs.keys())[0] # first key is for loss
@@ -238,7 +179,7 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         # Track best performance, and save the model's state
         if  self.best_vloss > valid_logs[val_loss_key]:
             self.best_vloss = valid_logs[val_loss_key]
-            logger.info(f'Validation loss reduced. Saving the model at epoch: {self.epoch:04d}')
+            logger.info(f'Validation loss reduced. Saving the model.')
             self.cnt_patience = 0 # reset patience
             # best_model_epoch = self.epoch
             this_epoch_save_model = True
@@ -246,7 +187,7 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         # Compare iou score
         elif self.best_viou < valid_logs['iou_score']:
             self.best_viou = valid_logs['iou_score']
-            logger.info(f'Validation IoU increased. Saving the model at epoch: {self.epoch:04d}.')
+            logger.info(f'Validation IoU increased. Saving the model at epoch.')
             self.cnt_patience = 0 # reset patience
             # best_model_epoch = self.epoch
             this_epoch_save_model = True
@@ -264,8 +205,103 @@ class TemplateTaskRunner(PyTorchTaskRunner):
             model_path = os.path.join(save_dir,  f"{self.collaborator_name}.pth")#f"{self.collaborator_name}_round{self.round_num}.pth")
             torch.save(self.model.state_dict(), model_path)
 
-        self.epoch += 1
 
+        #----------------------------------------------------------
+        if self.after_train:
+
+            torch.utils.data.dataloader._DataLoader__initialized = False
+            del validation_dataloader
+            gc.collect()
+            self.load_model(clear_cache = True)
+            
+            self.after_train = False
+        #----------------------------------------------------------
 
         return Metric(name="accuracy", value=np.array(valid_logs["iou_score"])) # FIXME , not sure if its true
         #return Metric(name="accuracy", value=np.array(accuracy))
+
+
+    def load_model(self, clear_cache : bool):
+
+        if clear_cache:
+
+            del self.model, self.optimizer, self.scheduler
+            gc.collect()
+
+        # create segmentation model with pretrained encoder
+        self.model = model.Unet(
+            encoder_name=ENCODER,
+            encoder_weights=ENCODER_WEIGHTS,
+            # aux_params=aux_params,
+            classes=self.num_classes,
+            activation=ACTIVATION,
+            decoder_attention_type='pscse',
+        )
+
+        #preprocessing_fn = encoders.get_preprocessing_fn(ENCODER, ENCODER_WEIGHTS)
+
+        self.model.to(self.device)
+
+
+        # Optimizer
+        self.optimizer = torch.optim.Adam([
+            dict(params=self.model.parameters(), lr=LR, weight_decay=WEIGHT_DECAY),
+        ])
+
+
+        # Learning rate scheduler
+        self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer,
+                                    factor=0.1,
+                                    mode='min',
+                                    patience=10,
+                                    min_lr=0.00001#,
+                                    #verbose=True,
+                                    )
+
+    def get_train_epoch(self):
+
+        # Loss function
+        dice_loss = losses.DiceLoss()
+        focal_loss = losses.FocalLoss()
+        total_loss = base.SumOfLosses(dice_loss, focal_loss)
+
+        # Metrics
+        metrics = [
+            metricsutil.IoU(threshold=0.5),
+            metricsutil.Fscore(threshold=0.5),
+        ]
+
+
+        return train.TrainEpoch(
+            self.model,
+            loss=total_loss,
+            metrics=metrics,
+            optimizer=self.optimizer,
+            device=self.device,
+            verbose=False,
+        )
+    
+
+    def get_valid_epoch(self):
+
+        # Loss function
+        dice_loss = losses.DiceLoss()
+        focal_loss = losses.FocalLoss()
+        total_loss = base.SumOfLosses(dice_loss, focal_loss)
+
+        # Metrics
+        metrics = [
+            metricsutil.IoU(threshold=0.5),
+            metricsutil.Fscore(threshold=0.5),
+        ]
+
+
+        return train.ValidEpoch(
+            self.model,
+            loss=total_loss,
+            metrics=metrics,
+            device=self.device,
+            verbose=False,
+        )
+    
+    
