@@ -118,18 +118,11 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         # Replace the following placeholder with actual training code.
 
         process = psutil.Process(os.getpid())
-        logger.info(f"**********Start training. Memory used: {process.memory_info().rss / 1e6:.2f} MB**********")
 
         logger.info(f"Train current epoch...")
         train_epoch = self.get_train_epoch()
         logger.info(f"Before training loop: {process.memory_info().rss / 1e6:.2f} MB")
-        
-
-        tracemalloc.start()
-
         train_logs = train_epoch.run(train_dataloader)
-        logger.info(tracemalloc.get_traced_memory())
-        tracemalloc.stop()
         logger.info(f"After training loop: {process.memory_info().rss / 1e6:.2f} MB")
     
 
@@ -145,17 +138,12 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         model_path = os.path.join(save_dir,  f"{self.collaborator_name}.pth")#f"{self.collaborator_name}_round{self.round_num}.pth")
         modelutils.save(model_path, self.model.state_dict(), self.optimizer.state_dict())
 
-        logger.info("[CW DEBUGGING] clear train_dataloader cache...")
-        logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
         torch.utils.data.dataloader._DataLoader__initialized = False
         del train_dataloader
         gc.collect()
-        logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
         
         self.after_train = True
         
-        
-        logger.info(f"**********Finish training Memory used: {process.memory_info().rss / 1e6:.2f} MB**********")
 
         return Metric(name="dice_loss + focal_loss", value=np.array(train_logs[train_loss_key]))
     
@@ -174,9 +162,6 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         """
         # Implement validation logic here and return a Metric object with the validation accuracy.
         # Replace the following placeholder with actual validation code.
-
-        process = psutil.Process(os.getpid())
-        logger.info(f"**********Start validate. Memory used: {process.memory_info().rss / 1e6:.2f} MB**********")
 
 
         logger.info(f"Validate current epoch...")
@@ -227,24 +212,15 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         #----------------------------------------------------------
         if self.after_train:
 
-            logger.info("[CW DEBUGGING] clear validation_dataloader cache...")
             process = psutil.Process(os.getpid())
-            logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
             torch.utils.data.dataloader._DataLoader__initialized = False
             del validation_dataloader
             gc.collect()
-            logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
-
-            logger.info("[CW DEBUGGING] clear model cache...")
-            logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
             self.load_model(clear_cache = True)
             
-            logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
             self.after_train = False
         #----------------------------------------------------------
         
-        logger.info(f"**********Finish validate: Memory used: {process.memory_info().rss / 1e6:.2f} MB**********")
-
    
         return Metric(name="accuracy", value=np.array(valid_logs["iou_score"])) # FIXME , not sure if its true
         #return Metric(name="accuracy", value=np.array(accuracy))
@@ -256,10 +232,6 @@ class TemplateTaskRunner(PyTorchTaskRunner):
 
             del self.model, self.optimizer, self.scheduler
             gc.collect()
-
-        logger.info("[CW DEBUGGING] load model...")
-        process = psutil.Process(os.getpid())
-        logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
 
         # create segmentation model with pretrained encoder
         self.model = model.Unet(
@@ -275,18 +247,12 @@ class TemplateTaskRunner(PyTorchTaskRunner):
 
         self.model.to(self.device)
 
-        logger.info("[CW DEBUGGING] load optimizer...")
-        logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
-
 
         # Optimizer
         self.optimizer = torch.optim.Adam([
             dict(params=self.model.parameters(), lr=LR, weight_decay=WEIGHT_DECAY),
         ])
 
-
-        logger.info("[CW DEBUGGING] load scheduler...")
-        logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
 
         # Learning rate scheduler
         self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer,
@@ -296,12 +262,6 @@ class TemplateTaskRunner(PyTorchTaskRunner):
                                     min_lr=0.00001#,
                                     #verbose=True,
                                     )
-
-        logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
-
-
-        
-
 
     def get_train_epoch(self):
 
