@@ -135,30 +135,6 @@ class TemplateTaskRunner(PyTorchTaskRunner):
 
 
 
-    def forward(self, x):
-        """
-        Defines the forward pass of the CNN model.
-
-        Args:
-            x (torch.Tensor): Input tensor of shape (N, C, H, W) where
-                              N is the batch size,
-                              C is the number of channels,
-                              H is the height, and
-                              W is the width.
-
-        Returns:
-            torch.Tensor: Output tensor after passing through the CNN layers.
-        """
-        x = F.relu(self.conv1(x))
-        x = F.max_pool2d(x, 2, 2)
-        x = F.relu(self.conv2(x))
-        x = F.max_pool2d(x, 2, 2)
-        x = x.view(-1, 800)
-        x = F.relu(self.fc1(x))
-        x = self.fc2(x)
-
-        return x
-
     def train_(
         self, train_dataloader: Iterator[Tuple[np.ndarray, np.ndarray]]
     ) -> Metric:
@@ -173,6 +149,9 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         """
         # Implement training logic here and return a Metric object with the training loss.
         # Replace the following placeholder with actual training code.
+
+        process = psutil.Process(os.getpid())
+        logger.info(f"Start training [Round {self.round_num}] Memory used: {process.memory_info().rss / 1e6:.2f} MB")
 
         logger.info(f"Train current epoch...")
         train_logs = self.train_epoch.run(train_dataloader)
@@ -190,14 +169,16 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         modelutils.save(model_path, self.model.state_dict(), self.optimizer.state_dict())
 
         logger.info("[CW DEBUGGING] clear train_dataloader cache...")
-        process = psutil.Process(os.getpid())
         logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
+        torch.utils.data.dataloader._DataLoader__initialized = False
         del train_dataloader
         gc.collect()
         logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
         
         self.after_train = True
         
+        
+        logger.info(f"Finish training [Round {self.round_num}] Memory used: {process.memory_info().rss / 1e6:.2f} MB")
 
         return Metric(name="dice_loss + focal_loss", value=np.array(train_logs[train_loss_key]))
     
@@ -216,6 +197,9 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         """
         # Implement validation logic here and return a Metric object with the validation accuracy.
         # Replace the following placeholder with actual validation code.
+
+        process = psutil.Process(os.getpid())
+        logger.info(f"Start validate [Round {self.round_num}] Memory used: {process.memory_info().rss / 1e6:.2f} MB")
 
 
         logger.info(f"Validate current epoch...")
@@ -265,6 +249,7 @@ class TemplateTaskRunner(PyTorchTaskRunner):
             logger.info("[CW DEBUGGING] clear validation_dataloader cache...")
             process = psutil.Process(os.getpid())
             logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
+            torch.utils.data.dataloader._DataLoader__initialized = False
             del validation_dataloader
             gc.collect()
             logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
@@ -276,6 +261,9 @@ class TemplateTaskRunner(PyTorchTaskRunner):
             logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
             self.after_train = False
         #----------------------------------------------------------
+        
+        logger.info(f"Finish validate:[Round {self.round_num}] Memory used: {process.memory_info().rss / 1e6:.2f} MB")
+
    
         return Metric(name="accuracy", value=np.array(valid_logs["iou_score"])) # FIXME , not sure if its true
         #return Metric(name="accuracy", value=np.array(accuracy))
