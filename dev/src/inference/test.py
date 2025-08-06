@@ -556,11 +556,24 @@ for i in range(len(list_IDs_test)):
         silhouette_base_image = prediction_sized_raw_color_img.copy()
         silhouette = np.zeros_like(img_np)
 
+        # Build the silhouette image
         for label_val in np.unique(pred):
-            if label_val == 0: continue  # skip background
+            if label_val == 0:
+                continue  # skip background
             silhouette[pred == label_val] = label_color_keyvalue[label_val]
-    
-        blended = cv2.addWeighted(silhouette_base_image, 0.3, silhouette, 0.7, 0)
+
+        # Create a mask for foreground pixels (where silhouette is not black)
+        foreground_mask = np.any(silhouette != [0, 0, 0], axis=-1)
+
+        # Prepare a blended image (initially same as base)
+        blended = silhouette_base_image.copy()
+
+        # Blend only where silhouette is not black (i.e., foreground)
+        blended[foreground_mask] = cv2.addWeighted(
+            silhouette_base_image[foreground_mask], 0.3,
+            silhouette[foreground_mask], 0.7, 0
+        )
+        
         cv2.imwrite(os.path.join(save_dir_pred_overlay, list_IDs_test[i]), blended)
         print(f"Silhouette: Write to {os.path.join(save_dir_pred_overlay, list_IDs_test[i])}")
 
