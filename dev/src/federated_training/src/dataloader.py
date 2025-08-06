@@ -3,7 +3,7 @@
 #----------------------------------------------------------------------------
 # Created By  : cw
 # Created Date: 2025-07-28
-# Updated Date: 2025-07-28
+# Updated Date: 2025-08-05
 # ---------------------------------------------------------------------------
 from logging import getLogger
 
@@ -18,6 +18,7 @@ from woundlib.thirdpartymodel.segmentation_models_pytorch import encoders
 import albumentations as albu
 import torch
 import torch.nn.functional as F
+import psutil
 
 logger = getLogger(__name__)
 
@@ -108,6 +109,12 @@ class DFUTissueSegNetDataLoader(PyTorchDataLoader):
         random.seed(seed) # seed for random number generator
         random.shuffle(list_IDs_train) # shuffle train names
 
+        logger.info("[CW DEBUGGING] Load Data...")
+        process = psutil.Process(os.getpid())
+        logger.info(f"Memory used: {process.memory_info().rss / 1e6:.2f} MB")
+
+
+
         logger.info(f'No. of training images: {len(list_IDs_train)}')
         logger.info(f'No. of validation images: {len(list_IDs_val)}')
         #logger.info('No. of test images: ', len(list_IDs_test))
@@ -135,10 +142,12 @@ class DFUTissueSegNetDataLoader(PyTorchDataLoader):
         DEFAULT_IMG_VAL = cv2.imread(os.path.join(x_valid_dir, list_IDs_val[0]))[:,:,::-1]
         DEFAULT_MASK_VAL = cv2.imread(os.path.join(y_valid_dir, list_IDs_val[0]), 0)
 
-
         preprocessing_fn = encoders.get_preprocessing_fn('mit_b3', "imagenet")#ENCODER, ENCODER_WEIGHTS)
 
+
+
         # Dataloader ===================================================================
+
         train_dataset = Dataset(
             list_IDs_train,
             x_train_dir,
@@ -165,25 +174,11 @@ class DFUTissueSegNetDataLoader(PyTorchDataLoader):
             default_mask=DEFAULT_MASK_VAL,
         )
 
-        self.train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=4)
-        self.valid_loader = DataLoader(valid_dataset, batch_size=self.batch_size, shuffle=False, num_workers=4)
+        self.train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=4, persistent_workers=False,
+pin_memory=False)
+        self.valid_loader = DataLoader(valid_dataset, batch_size=self.batch_size, shuffle=False, num_workers=4, persistent_workers=False,
+pin_memory=False)        
 
-        # Test dataloader ==============================================================
-        # test_dataset = Dataset(
-        #     list_IDs_test,
-        #     x_test_dir,
-        #     y_test_dir,
-        #     augmentation=get_validation_augmentation(),
-        #     preprocessing=get_preprocessing(preprocessing_fn),
-        #     resize=(self.RESIZE),
-        #     to_categorical=False, # don't convert to onehot now
-        #     n_classes=self.n_classes,
-        # )
-
-        # test_dataloader = DataLoader(test_dataset,
-        #                             batch_size=1,
-        #                             shuffle=False,
-        #                             num_workers=6)
 
 # Create a function to read names from a text file, and add extensions
 def _read_names(txt_file, ext=".png"):
