@@ -76,7 +76,7 @@ tasks:
 straggler_handling_policy:
   settings:
     minimum_reporting: 1
-    straggler_cutoff_time: 15
+    straggler_cutoff_time: 1200
   template: openfl.component.aggregator.straggler_handling.CutoffTimePolicy
 st:
   model_name: dfusegnet

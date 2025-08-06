@@ -15,7 +15,7 @@
   ```
 
 ### File Dependencies
-- Git clone this repo, copy `<path-to>/federated_training` in all server to train the model 
+- Git clone this repo, copy `<path-to>/distributed_dfusegnet/v0` in all server to train the model 
 
 ### Python Dependencies
 - Activate the pipenv/conda environment
@@ -43,9 +43,13 @@ python setup.py develop
 - In each node, following execute under `<path-to>/federated_training`
 
 ### Aggregator
+- for the first time, this will generate `<path-to>/save/init.pbuf`
 ```
-fx plan initialize --aggregator_address ms.agg01.symptomsquirrel.com (only for the first time)
+fx plan initialize --aggregator_address ms.agg01.symptomsquirrel.com 
+```
 
+- start aggregator
+```
 fx aggregator start
 ```
 
