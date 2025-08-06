@@ -6,7 +6,7 @@ aggregator:
     last_state_path: save/last.pbuf
     persist_checkpoint: false
     persistent_db_path: local_state/tensor.db
-    rounds_to_train: 180
+    rounds_to_train: 150
     write_logs: true
   template: openfl.component.aggregator.Aggregator
 assigner:
@@ -46,7 +46,6 @@ network:
     client_reconnect_interval: 5
     enable_atomic_connections: false
     hash_salt: auto
-    require_client_auth: true
     transport_protocol: grpc
     use_tls: false
   template: openfl.federation.Network
